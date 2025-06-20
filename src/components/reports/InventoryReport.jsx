@@ -108,8 +108,10 @@ const InventoryReport = () => {
     ],
   };
 
-  const exporterData = Object.entries(stockAnalysis.byExporter)
-    .sort(([,a], [,b]) => b.totalStock - a.totalStock);
+  const exporterData = stockAnalysis?.byExporter ? 
+    Object.entries(stockAnalysis.byExporter)
+      .sort(([,a], [,b]) => b.totalStock - a.totalStock) 
+    : [];
 
   return (
     <div className="min-h-screen bg-[#F9F6F4] w-full m-0 p-0">

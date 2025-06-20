@@ -149771,20 +149771,34 @@ export const analyzeSpecificChargeFromEmbedded = async (chargeType, displayName)
 // Get initial stock analysis
 export const getInitialStockAnalysisFromEmbedded = async () => {
   const stockByLot = {};
+  const stockByExporter = {};
   
   embeddedStockData.forEach(row => {
     const lotid = row.Lotid;
+    const exporter = row['Exporter Clean'];
     const stock = parseFloat(row['Initial Stock']) || 0;
     
     if (!stockByLot[lotid]) {
       stockByLot[lotid] = {
         lotid,
-        exporter: row['Exporter Clean'],
+        exporter,
         totalStock: 0
       };
     }
     
     stockByLot[lotid].totalStock += stock;
+    
+    // Group by exporter
+    if (!stockByExporter[exporter]) {
+      stockByExporter[exporter] = {
+        exporter,
+        totalStock: 0,
+        lots: 0
+      };
+    }
+    
+    stockByExporter[exporter].totalStock += stock;
+    stockByExporter[exporter].lots += 1;
   });
   
   const lots = Object.values(stockByLot);
@@ -149795,7 +149809,8 @@ export const getInitialStockAnalysisFromEmbedded = async () => {
     totalLots: lots.length,
     totalStock,
     avgStockPerLot,
-    lots
+    lots,
+    byExporter: stockByExporter
   };
 };
 
