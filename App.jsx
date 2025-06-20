@@ -4,7 +4,6 @@ import SalesDetailReport from './src/components/reports/SalesDetailReport';
 import CostConsistencyReport from './src/components/reports/CostConsistencyReport';
 import ProfitabilityReport from './src/components/reports/ProfitabilityReport';
 import InventoryReport from './src/components/reports/InventoryReport';
-import DataTest from './src/components/DataTest';
 
 function App() {
   const [activeReport, setActiveReport] = useState('sales');
@@ -33,7 +32,6 @@ function App() {
         onSectionScroll={handleSectionScroll}
       />
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <DataTest />
         <div className="fade-in">
           {activeReport === 'sales' && (
             <SalesDetailReport onRefsUpdate={handleRefsUpdate} />

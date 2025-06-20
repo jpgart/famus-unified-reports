@@ -608,7 +608,10 @@ const OceanFreightAnalysis = () => {
     const avgFreight = freightData.summary?.avgPerBox || 0;
     const inconsistencies = [];
     
-    freightData.byExporter.forEach(exporter => {
+    // Convert byExporter object to array
+    const exportersArray = Object.values(freightData.byExporter);
+    
+    exportersArray.forEach(exporter => {
       const deviation = Math.abs(exporter.avgPerBox - avgFreight);
       const percentageDeviation = avgFreight > 0 ? (deviation / avgFreight) * 100 : 0;
       
@@ -649,12 +652,16 @@ const OceanFreightAnalysis = () => {
   }
 
   const inconsistencies = detectInconsistencies();
+  
+  // Convert byExporter object to array for chart data
+  const exportersArray = Object.values(freightData.byExporter);
+  
   const chartData = {
-    labels: freightData.byExporter.map(e => e.exporter),
+    labels: exportersArray.map(e => e.exporter),
     datasets: [
       {
         label: 'Ocean Freight per Box ($)',
-        data: freightData.byExporter.map(e => e.avgPerBox || 0),
+        data: exportersArray.map(e => e.avgPerBox || 0),
         backgroundColor: BLUE_PALETTE[1],
         borderColor: BLUE_PALETTE[0],
         borderWidth: 1,
@@ -750,7 +757,7 @@ const OceanFreightAnalysis = () => {
               </tr>
             </thead>
             <tbody>
-              {freightData.byExporter.map((exporter, index) => {
+              {exportersArray.map((exporter, index) => {
                 const avgFreight = freightData.summary?.avgPerBox || 0;
                 const deviation = Math.abs(exporter.avgPerBox - avgFreight);
                 const percentageDeviation = avgFreight > 0 ? (deviation / avgFreight) * 100 : 0;
@@ -838,12 +845,15 @@ const PackingMaterialsAnalysis = () => {
     );
   }
 
+  // Convert byExporter object to array for chart data
+  const exportersArray = Object.values(analysisData.byExporter);
+
   const chartData = {
-    labels: analysisData.byExporter.map(e => e.exporter),
+    labels: exportersArray.map(e => e.exporter),
     datasets: [
       {
         label: `${displayName} per Box ($)`,
-        data: analysisData.byExporter.map(e => e.avgPerBox || 0),
+        data: exportersArray.map(e => e.avgPerBox || 0),
         backgroundColor: CHART_COLORS[0],
         borderColor: CHART_COLORS[1],
         borderWidth: 1,
@@ -896,7 +906,7 @@ const PackingMaterialsAnalysis = () => {
             </tr>
           </thead>
           <tbody>
-            {analysisData.byExporter.map((row, index) => (
+            {exportersArray.map((row, index) => (
               <tr key={row.exporter || `exporter-${index}`} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                 <td className="p-2 font-medium">{row.exporter || 'Unknown'}</td>
                 <td className="p-2 text-right">{formatPrice(row.totalAmount || 0)}</td>
