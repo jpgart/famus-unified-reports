@@ -17,9 +17,13 @@ const Header = () => {
           {/* Center: Logo */}
           <div className="flex items-center">
             <img 
-              src="/Header PP Logo.png" 
+              src="./Header PP Logo.png" 
               alt="Famus Logo" 
               className="h-10 w-auto"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                console.log('Logo not found, hiding image');
+              }}
             />
           </div>
           

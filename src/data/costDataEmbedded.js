@@ -2,6 +2,19 @@
 // Generated on: 2025-06-20T20:03:48.917Z
 // Source: Charge Summary New.csv, Initial_Stock_All.csv
 
+// Exporters to exclude from all analyses
+const EXCLUDED_EXPORTERS = ['Del Monte', 'VIDEXPORT', 'Videxport'];
+
+// Filter function for embedded data
+const filterExcludedExporters = (data) => {
+  return data.filter(row => {
+    const exporter = row['Exporter Clean'];
+    return exporter && !EXCLUDED_EXPORTERS.includes(exporter);
+  });
+};
+
+// ...existing code...
+
 export const embeddedCostData = [
   {
     "Lotid": "24A0005623",
@@ -149621,7 +149634,10 @@ export const calculateMetricsFromEmbedded = async () => {
   
   const metrics = {};
   
-  embeddedCostData.forEach(row => {
+  // Filter out excluded exporters
+  const filteredData = filterExcludedExporters(embeddedCostData);
+  
+  filteredData.forEach(row => {
     const lotid = row.Lotid;
     const charge = parseEuropeanNumber(row.Chgamt);
     const chargeDescription = row.Chargedescr;
@@ -149690,7 +149706,10 @@ export const getDataSummaryFromEmbedded = async () => {
 export const analyzeSpecificChargeFromEmbedded = async (chargeType, displayName) => {
   console.log(`📊 Analyzing ${displayName} charges from embedded data...`);
   
-  const chargeData = embeddedCostData.filter(row => 
+  // Filter out excluded exporters first
+  const filteredData = filterExcludedExporters(embeddedCostData);
+  
+  const chargeData = filteredData.filter(row => 
     row.Chargedescr === chargeType && row.Chgamt > 0
   );
   
@@ -149773,7 +149792,10 @@ export const getInitialStockAnalysisFromEmbedded = async () => {
   const stockByLot = {};
   const stockByExporter = {};
   
-  embeddedStockData.forEach(row => {
+  // Filter out excluded exporters
+  const filteredStockData = filterExcludedExporters(embeddedStockData);
+  
+  filteredStockData.forEach(row => {
     const lotid = row.Lotid;
     const exporter = row['Exporter Clean'];
     const stock = parseFloat(row['Initial Stock']) || 0;
@@ -149817,10 +149839,15 @@ export const getInitialStockAnalysisFromEmbedded = async () => {
 // Get top varieties by stock
 export const getTopVarietiesByStockFromEmbedded = async (limit = 8) => {
   const varietyStock = {};
+  const varietyExporters = {};
   
-  embeddedStockData.forEach(row => {
+  // Filter out excluded exporters
+  const filteredStockData = filterExcludedExporters(embeddedStockData);
+  
+  filteredStockData.forEach(row => {
     const variety = row.Variety;
     const stock = parseFloat(row['Initial Stock']) || 0;
+    const exporter = row['Exporter Clean'];
     
     if (!varietyStock[variety]) {
       varietyStock[variety] = {
@@ -149828,13 +149855,22 @@ export const getTopVarietiesByStockFromEmbedded = async (limit = 8) => {
         totalStock: 0,
         lots: 0
       };
+      varietyExporters[variety] = new Set();
     }
     
     varietyStock[variety].totalStock += stock;
     varietyStock[variety].lots += 1;
+    
+    if (exporter) {
+      varietyExporters[variety].add(exporter);
+    }
   });
   
   return Object.values(varietyStock)
+    .map(variety => ({
+      ...variety,
+      exporterCount: varietyExporters[variety.variety]?.size || 0
+    }))
     .sort((a, b) => b.totalStock - a.totalStock)
     .slice(0, limit);
 };

@@ -3,3 +3,4 @@ export * from './formatters.js';
 export * from './dataProcessing.js';
 export * from './chartConfig.js';
 export * from './colorPalette.js';
+export * from './dataFiltering.js';

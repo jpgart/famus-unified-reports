@@ -283,31 +283,39 @@ const InventoryReport = () => {
                 <tr>
                   <th className="bg-[#3D5A80] text-white px-3 py-2 text-left font-bold border">Variety</th>
                   <th className="bg-[#3D5A80] text-white px-3 py-2 text-center font-bold border">Total Stock</th>
-                  <th className="bg-[#3D5A80] text-white px-3 py-2 text-center font-bold border">Lotids</th>
+                  <th className="bg-[#3D5A80] text-white px-3 py-2 text-center font-bold border">Lots</th>
                   <th className="bg-[#3D5A80] text-white px-3 py-2 text-center font-bold border">Exporters</th>
                   <th className="bg-[#3D5A80] text-white px-3 py-2 text-center font-bold border">Stock %</th>
                 </tr>
               </thead>
               <tbody>
-                {topVarieties.map((variety, index) => {
-                  const stockPercent = variety.totalStock / stockAnalysis.totalStock;
-                  const stockColor = stockPercent > 0.20 ? 'bg-[#3D5A80] text-white' : 
-                                    stockPercent > 0.15 ? 'bg-[#6B8B9E] text-white' :
-                                    stockPercent > 0.10 ? 'bg-[#98C1D9] text-black' : 
-                                    stockPercent > 0.05 ? 'bg-[#BEE0EB] text-black' :
-                                    'bg-[#E0FBFC] text-black';
-                  return (
-                    <tr key={variety.variety} className="hover:bg-gray-50 border-b">
-                      <td className="font-bold bg-[#E0FBFC] px-3 py-2 border text-[#3D5A80]">{variety.variety}</td>
-                      <td className={`px-3 py-2 text-center font-semibold border ${stockColor}`}>
-                        {formatNumber(Math.round(variety.totalStock))}
-                      </td>
-                      <td className="px-3 py-2 text-center border">{formatNumber(Math.round(variety.lotidCount))}</td>
-                      <td className="px-3 py-2 text-center border">{formatNumber(Math.round(variety.exporterCount))}</td>
-                      <td className="px-3 py-2 text-center border">{formatPercentage(stockPercent)}</td>
-                    </tr>
-                  );
-                })}
+                {topVarieties && topVarieties.length > 0 ? (
+                  topVarieties.map((variety, index) => {
+                    const stockPercent = variety.totalStock / stockAnalysis.totalStock;
+                    const stockColor = stockPercent > 0.20 ? 'bg-[#3D5A80] text-white' : 
+                                      stockPercent > 0.15 ? 'bg-[#6B8B9E] text-white' :
+                                      stockPercent > 0.10 ? 'bg-[#98C1D9] text-black' : 
+                                      stockPercent > 0.05 ? 'bg-[#BEE0EB] text-black' :
+                                      'bg-[#E0FBFC] text-black';
+                    return (
+                      <tr key={variety.variety} className="hover:bg-gray-50 border-b">
+                        <td className="font-bold bg-[#E0FBFC] px-3 py-2 border text-[#3D5A80]">{variety.variety}</td>
+                        <td className={`px-3 py-2 text-center font-semibold border ${stockColor}`}>
+                          {formatNumber(Math.round(variety.totalStock))}
+                        </td>
+                        <td className="px-3 py-2 text-center border">{formatNumber(variety.lots)}</td>
+                        <td className="px-3 py-2 text-center border">{formatNumber(variety.exporterCount || 0)}</td>
+                        <td className="px-3 py-2 text-center border">{formatPercentage(stockPercent)}</td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="px-3 py-8 text-center text-gray-500">
+                      Loading varieties data...
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
