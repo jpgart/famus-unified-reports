@@ -144,20 +144,21 @@ const InventoryReport = () => {
               size: 'normal'
             },
             { 
-              label: 'Total Lotids', 
-              value: stockAnalysis.totalLotids, 
+              label: 'Total Lots', 
+              value: stockAnalysis.totalLots, 
               type: 'integer',
               size: 'normal'
             },
             { 
-              label: 'Unique Varieties', 
-              value: stockAnalysis.uniqueVarieties, 
-              type: 'integer',
+              label: 'Avg Stock per Lot', 
+              value: stockAnalysis.avgStockPerLot, 
+              type: 'decimal',
+              decimals: 1,
               size: 'normal'
             },
             { 
               label: 'Active Exporters', 
-              value: stockAnalysis.uniqueExporters, 
+              value: exporterData.length, 
               type: 'integer',
               size: 'normal'
             }
@@ -240,15 +241,15 @@ const InventoryReport = () => {
                 <tr>
                   <th className="bg-[#3D5A80] text-white px-3 py-2 text-left font-bold border">Exporter</th>
                   <th className="bg-[#3D5A80] text-white px-3 py-2 text-center font-bold border">Total Stock</th>
-                  <th className="bg-[#3D5A80] text-white px-3 py-2 text-center font-bold border">Lotids</th>
-                  <th className="bg-[#3D5A80] text-white px-3 py-2 text-center font-bold border">Varieties</th>
-                  <th className="bg-[#3D5A80] text-white px-3 py-2 text-center font-bold border">Avg/Lot</th>
+                  <th className="bg-[#3D5A80] text-white px-3 py-2 text-center font-bold border">Lots</th>
+                  <th className="bg-[#3D5A80] text-white px-3 py-2 text-center font-bold border">Avg per Lot</th>
                   <th className="bg-[#3D5A80] text-white px-3 py-2 text-center font-bold border">Stock %</th>
                 </tr>
               </thead>
               <tbody>
                 {exporterData.map(([exporter, data], index) => {
                   const stockPercent = data.totalStock / stockAnalysis.totalStock;
+                  const avgPerLot = data.lots > 0 ? data.totalStock / data.lots : 0;
                   const stockColor = stockPercent > 0.25 ? 'bg-[#3D5A80] text-white' : 
                                     stockPercent > 0.20 ? 'bg-[#6B8B9E] text-white' :
                                     stockPercent > 0.15 ? 'bg-[#98C1D9] text-black' : 
@@ -260,9 +261,8 @@ const InventoryReport = () => {
                       <td className={`px-3 py-2 text-center font-semibold border ${stockColor}`}>
                         {formatNumber(Math.round(data.totalStock))}
                       </td>
-                      <td className="px-3 py-2 text-center border">{formatNumber(Math.round(data.lotidCount))}</td>
-                      <td className="px-3 py-2 text-center border">{formatNumber(Math.round(data.varietyCount))}</td>
-                      <td className="px-3 py-2 text-center border">{formatNumber(Math.round(data.avgStockPerLotid))}</td>
+                      <td className="px-3 py-2 text-center border">{formatNumber(data.lots)}</td>
+                      <td className="px-3 py-2 text-center border">{formatNumber(Math.round(avgPerLot))}</td>
                       <td className="px-3 py-2 text-center border">{formatPercentage(stockPercent)}</td>
                     </tr>
                   );
