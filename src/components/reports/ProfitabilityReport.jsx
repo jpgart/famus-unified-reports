@@ -3,14 +3,14 @@ import { Bar, Line, Pie, Scatter } from 'react-chartjs-2';
 import 'chart.js/auto';
 import { Chart as ChartJS } from 'chart.js/auto';
 import { salesData } from '../../data/salesDataEmbedded';
-import { getChargeData, calculateMetrics } from '../../data/costDataEmbedded';
+import { getChargeDataFromCSV, calculateMetricsFromCSV } from '../../data/costDataCSV';
 import { formatNumber, formatPercentage, formatInteger, formatCurrency, formatPrice, isPriceField, formatTotalSales } from '../../utils/formatters';
 import { getDefaultChartOptions, FAMUS_COLORS, registerChartPlugins } from '../../utils/chartConfig';
 import { KPISection } from '../common';
 
 // Data Processing Functions
-const processProfitabilityData = () => {
-  const costMetrics = calculateMetrics();
+const processProfitabilityData = async () => {
+  const costMetrics = await calculateMetricsFromCSV();
   
   // Group sales by Lotid
   const salesByLotid = {};
@@ -487,14 +487,37 @@ const ProfitabilityReport = () => {
     varieties: true,
     exporters: true,
   });
-
-  // Process data
-  const profitabilityData = useMemo(() => processProfitabilityData(), []);
+  const [profitabilityData, setProfitabilityData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    registerChartPlugins();
-    console.log('💰 Profitability Report loaded with', profitabilityData.length, 'lots');
-  }, [profitabilityData.length]);
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const data = await processProfitabilityData();
+        setProfitabilityData(data);
+        registerChartPlugins();
+        console.log('💰 Profitability Report loaded with', data.length, 'lots');
+      } catch (error) {
+        console.error('Error loading profitability data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="text-2xl mb-4">⏳</div>
+          <div className="text-lg text-gray-600">Loading profitability data...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (!profitabilityData.length) {
     return (
