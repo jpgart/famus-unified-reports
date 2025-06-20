@@ -2730,7 +2730,13 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
     const loadData = async () => {
       try {
         setLoading(true);
-        console.log('📊 Loading cost data from CSV...');
+        console.log('📊 Loading cost data from embedded data...');
+        console.log('🔍 Testing data access...');
+        
+        // Test basic data access first
+        console.log('📋 Testing calculateMetricsFromEmbedded function...');
+        const metricsTest = await calculateMetricsFromEmbedded();
+        console.log('✅ Metrics test result:', Object.keys(metricsTest).length, 'lots');
         
         const [metricsData, chargeDataCSV, dataSummary] = await Promise.all([
           calculateMetricsFromEmbedded(),
@@ -2738,16 +2744,21 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
           getDataSummaryFromEmbedded()
         ]);
         
+        console.log('📈 Raw metrics data:', metricsData);
+        console.log('📋 Raw charge data length:', chargeDataCSV?.length);
+        console.log('📊 Data summary:', dataSummary);
+        
         setMetrics(metricsData);
         setChargeData(chargeDataCSV);
         
-        console.log('📈 Cost Consistency Report loaded from CSV');
+        console.log('📈 Cost Consistency Report loaded from embedded data');
         console.log(`📊 Analyzing ${Object.keys(metricsData).length} lot IDs`);
-        console.log('🔍 Data summary:', dataSummary);
+        console.log('🔍 Final data summary:', dataSummary);
         
         setLoading(false);
       } catch (err) {
         console.error('❌ Error loading cost data:', err);
+        console.error('❌ Error stack:', err.stack);
         setError(err.message);
         setLoading(false);
       }

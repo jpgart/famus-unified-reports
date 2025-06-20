@@ -24,6 +24,12 @@ const InventoryReport = () => {
     const loadStockAnalysis = async () => {
       try {
         setLoading(true);
+        console.log('📦 Loading inventory data from embedded data...');
+        
+        // Test functions individually
+        console.log('🔍 Testing inventory functions...');
+        const testAnalysis = await getInitialStockAnalysisFromEmbedded();
+        console.log('✅ Stock analysis test:', testAnalysis?.totalLots, 'lots');
         
         const [analysis, varieties, monthly] = await Promise.all([
           getInitialStockAnalysisFromEmbedded(),
@@ -31,13 +37,18 @@ const InventoryReport = () => {
           getStockDistributionByMonthFromEmbedded()
         ]);
         
+        console.log('📊 Raw analysis data:', analysis);
+        console.log('🌱 Raw varieties data:', varieties);
+        console.log('📅 Raw monthly data:', monthly);
+        
         setStockAnalysis(analysis);
         setTopVarieties(varieties);
         setMonthlyDistribution(monthly);
         
-        console.log('📦 Inventory analysis loaded:', analysis);
+        console.log('📦 Inventory analysis loaded successfully');
       } catch (error) {
-        console.error('Error loading stock analysis:', error);
+        console.error('❌ Error loading stock analysis:', error);
+        console.error('❌ Error stack:', error.stack);
       } finally {
         setLoading(false);
       }
