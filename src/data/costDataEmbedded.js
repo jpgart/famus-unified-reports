@@ -1,139 +1,6 @@
 // Auto-generated embedded cost and stock data
-// Generated on: 2025-06-20T16:24:21.918Z
+// Generated on: 2025-06-20T20:03:48.917Z
 // Source: Charge Summary New.csv, Initial_Stock_All.csv
-
-// Analyze specific charge type
-export const analyzeSpecificChargeFromEmbedded = async (chargeType, displayName) => {
-  console.log(`📊 Analyzing ${displayName} charges from embedded data...`);
-  
-  const chargeData = embeddedCostData.filter(row => 
-    row.Chargedescr === chargeType && row.Chgamt > 0
-  );
-  
-  if (chargeData.length === 0) {
-    return {
-      analysis: {
-        totalAmount: 0,
-        totalRecords: 0,
-        avgChargePerLot: 0,
-        lotsWithCharge: 0,
-        avgChargeAmount: 0
-      },
-      outliers: [],
-      byExporter: {}
-    };
-  }
-  
-  // Group by lot
-  const chargeByLot = {};
-  chargeData.forEach(row => {
-    const lotid = row.Lotid;
-    if (!chargeByLot[lotid]) {
-      chargeByLot[lotid] = {
-        lotid,
-        exporter: row['Exporter Clean'],
-        totalCharge: 0,
-        records: 0
-      };
-    }
-    chargeByLot[lotid].totalCharge += row.Chgamt;
-    chargeByLot[lotid].records += 1;
-  });
-  
-  const lots = Object.values(chargeByLot);
-  const totalAmount = lots.reduce((sum, lot) => sum + lot.totalCharge, 0);
-  const avgChargePerLot = lots.length > 0 ? totalAmount / lots.length : 0;
-  
-  // Find outliers (charges > 2 standard deviations from mean)
-  const charges = lots.map(lot => lot.totalCharge);
-  const mean = avgChargePerLot;
-  const stdDev = Math.sqrt(charges.reduce((sum, charge) => sum + Math.pow(charge - mean, 2), 0) / charges.length);
-  const outliers = lots.filter(lot => Math.abs(lot.totalCharge - mean) > 2 * stdDev);
-  
-  // Group by exporter
-  const byExporter = {};
-  lots.forEach(lot => {
-    const exporter = lot.exporter;
-    if (!byExporter[exporter]) {
-      byExporter[exporter] = {
-        exporter,
-        totalAmount: 0,
-        lots: 0,
-        avgCharge: 0
-      };
-    }
-    byExporter[exporter].totalAmount += lot.totalCharge;
-    byExporter[exporter].lots += 1;
-  });
-  
-  // Calculate averages
-  Object.values(byExporter).forEach(exp => {
-    exp.avgCharge = exp.lots > 0 ? exp.totalAmount / exp.lots : 0;
-  });
-  
-  return {
-    analysis: {
-      totalAmount,
-      totalRecords: chargeData.length,
-      avgChargePerLot,
-      lotsWithCharge: lots.length,
-      avgChargeAmount: chargeData.reduce((sum, row) => sum + row.Chgamt, 0) / chargeData.length
-    },
-    outliers,
-    byExporter
-  };
-};
-
-// Get top varieties by stock
-export const getTopVarietiesByStockFromEmbedded = async (limit = 8) => {
-  const varietyStock = {};
-  
-  embeddedStockData.forEach(row => {
-    const variety = row.Variety;
-    const stock = parseFloat(row['Initial Stock']) || 0;
-    
-    if (!varietyStock[variety]) {
-      varietyStock[variety] = {
-        variety,
-        totalStock: 0,
-        lots: 0
-      };
-    }
-    
-    varietyStock[variety].totalStock += stock;
-    varietyStock[variety].lots += 1;
-  });
-  
-  return Object.values(varietyStock)
-    .sort((a, b) => b.totalStock - a.totalStock)
-    .slice(0, limit);
-};
-
-// Get stock distribution by month
-export const getStockDistributionByMonthFromEmbedded = async () => {
-  const monthlyStock = {};
-  
-  embeddedStockData.forEach(row => {
-    const date = new Date(row['Entry Date']);
-    const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-    const stock = parseFloat(row['Initial Stock']) || 0;
-    
-    if (!monthlyStock[monthKey]) {
-      monthlyStock[monthKey] = {
-        month: monthKey,
-        totalStock: 0,
-        lots: 0
-      };
-    }
-    
-    monthlyStock[monthKey].totalStock += stock;
-    monthlyStock[monthKey].lots += 1;
-  });
-  
-  return Object.values(monthlyStock).sort((a, b) => a.month.localeCompare(b.month));
-};
-
-// ...existing code...
 
 export const embeddedCostData = [
   {
@@ -149819,13 +149686,95 @@ export const getDataSummaryFromEmbedded = async () => {
   };
 };
 
+// Analyze specific charge type
+export const analyzeSpecificChargeFromEmbedded = async (chargeType, displayName) => {
+  console.log(`📊 Analyzing ${displayName} charges from embedded data...`);
+  
+  const chargeData = embeddedCostData.filter(row => 
+    row.Chargedescr === chargeType && row.Chgamt > 0
+  );
+  
+  if (chargeData.length === 0) {
+    return {
+      analysis: {
+        totalAmount: 0,
+        totalRecords: 0,
+        avgChargePerLot: 0,
+        lotsWithCharge: 0,
+        avgChargeAmount: 0
+      },
+      outliers: [],
+      byExporter: {}
+    };
+  }
+  
+  // Group by lot
+  const chargeByLot = {};
+  chargeData.forEach(row => {
+    const lotid = row.Lotid;
+    if (!chargeByLot[lotid]) {
+      chargeByLot[lotid] = {
+        lotid,
+        exporter: row['Exporter Clean'],
+        totalCharge: 0,
+        records: 0
+      };
+    }
+    chargeByLot[lotid].totalCharge += row.Chgamt;
+    chargeByLot[lotid].records += 1;
+  });
+  
+  const lots = Object.values(chargeByLot);
+  const totalAmount = lots.reduce((sum, lot) => sum + lot.totalCharge, 0);
+  const avgChargePerLot = lots.length > 0 ? totalAmount / lots.length : 0;
+  
+  // Find outliers (charges > 2 standard deviations from mean)
+  const charges = lots.map(lot => lot.totalCharge);
+  const mean = avgChargePerLot;
+  const stdDev = Math.sqrt(charges.reduce((sum, charge) => sum + Math.pow(charge - mean, 2), 0) / charges.length);
+  const outliers = lots.filter(lot => Math.abs(lot.totalCharge - mean) > 2 * stdDev);
+  
+  // Group by exporter
+  const byExporter = {};
+  lots.forEach(lot => {
+    const exporter = lot.exporter;
+    if (!byExporter[exporter]) {
+      byExporter[exporter] = {
+        exporter,
+        totalAmount: 0,
+        lots: 0,
+        avgCharge: 0
+      };
+    }
+    byExporter[exporter].totalAmount += lot.totalCharge;
+    byExporter[exporter].lots += 1;
+  });
+  
+  // Calculate averages
+  Object.values(byExporter).forEach(exp => {
+    exp.avgCharge = exp.lots > 0 ? exp.totalAmount / exp.lots : 0;
+  });
+  
+  return {
+    analysis: {
+      totalAmount,
+      totalRecords: chargeData.length,
+      avgChargePerLot,
+      lotsWithCharge: lots.length,
+      avgChargeAmount: chargeData.reduce((sum, row) => sum + row.Chgamt, 0) / chargeData.length
+    },
+    outliers,
+    byExporter
+  };
+};
+
 // Get initial stock analysis
 export const getInitialStockAnalysisFromEmbedded = async () => {
   const stockByLot = {};
   
   embeddedStockData.forEach(row => {
     const lotid = row.Lotid;
-    const stock = parseEuropeanNumber(row['Initial Stock']);
+    const stock = parseFloat(row['Initial Stock']) || 0;
     
     if (!stockByLot[lotid]) {
       stockByLot[lotid] = {
@@ -149848,6 +149797,55 @@ export const getInitialStockAnalysisFromEmbedded = async () => {
     avgStockPerLot,
     lots
   };
+};
+
+// Get top varieties by stock
+export const getTopVarietiesByStockFromEmbedded = async (limit = 8) => {
+  const varietyStock = {};
+  
+  embeddedStockData.forEach(row => {
+    const variety = row.Variety;
+    const stock = parseFloat(row['Initial Stock']) || 0;
+    
+    if (!varietyStock[variety]) {
+      varietyStock[variety] = {
+        variety,
+        totalStock: 0,
+        lots: 0
+      };
+    }
+    
+    varietyStock[variety].totalStock += stock;
+    varietyStock[variety].lots += 1;
+  });
+  
+  return Object.values(varietyStock)
+    .sort((a, b) => b.totalStock - a.totalStock)
+    .slice(0, limit);
+};
+
+// Get stock distribution by month
+export const getStockDistributionByMonthFromEmbedded = async () => {
+  const monthlyStock = {};
+  
+  embeddedStockData.forEach(row => {
+    const date = new Date(row['Entry Date']);
+    const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+    const stock = parseFloat(row['Initial Stock']) || 0;
+    
+    if (!monthlyStock[monthKey]) {
+      monthlyStock[monthKey] = {
+        month: monthKey,
+        totalStock: 0,
+        lots: 0
+      };
+    }
+    
+    monthlyStock[monthKey].totalStock += stock;
+    monthlyStock[monthKey].lots += 1;
+  });
+  
+  return Object.values(monthlyStock).sort((a, b) => a.month.localeCompare(b.month));
 };
 
 // Clear cache function
