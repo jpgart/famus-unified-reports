@@ -2,18 +2,13 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Bar, Line, Pie, Scatter } from 'react-chartjs-2';
 import 'chart.js/auto';
 import { 
-  getChargeDataFromCSV, 
-  calculateMetricsFromCSV, 
-  getDataSummaryFromCSV,
-  analyzeSpecificChargeFromCSV,
-  getInitialStockAnalysis,
-  getTopVarietiesByStock,
-  getStockDistributionByMonth,
-  validateInitialStockByExporter,
-  loadInitialStockFromCSV,
-  getConsolidatedInitialStock,
-  clearAllCaches
-} from '../../data/costDataCSV';
+  calculateMetricsFromEmbedded, 
+  getDataSummaryFromEmbedded,
+  getChargeDataFromEmbedded,
+  getInitialStockAnalysisFromEmbedded,
+  analyzeSpecificChargeFromEmbedded,
+  clearEmbeddedDataCache
+} from '../../data/costDataEmbedded';
 import { formatNumber, formatPercentage, formatPrice } from '../../utils/formatters';
 import { getDefaultChartOptions, FAMUS_COLORS, CHART_COLORS, BLUE_PALETTE } from '../../utils/chartConfig';
 import { KPISection } from '../common';
@@ -593,7 +588,7 @@ const OceanFreightAnalysis = () => {
     const loadFreightAnalysis = async () => {
       try {
         setLoading(true);
-        const data = await analyzeSpecificChargeFromCSV('OCEAN FREIGHT', 'Ocean Freight');
+        const data = await analyzeSpecificChargeFromEmbedded('OCEAN FREIGHT', 'Ocean Freight');
         setFreightData(data);
       } catch (error) {
         console.error('Error analyzing Ocean Freight:', error);
@@ -806,7 +801,7 @@ const PackingMaterialsAnalysis = () => {
     const loadAnalysis = async () => {
       try {
         setLoading(true);
-        const data = await analyzeSpecificChargeFromCSV(chargeType, displayName);
+        const data = await analyzeSpecificChargeFromEmbedded(chargeType, displayName);
         setAnalysisData(data);
       } catch (error) {
         console.error(`Error analyzing ${chargeType}:`, error);
@@ -929,7 +924,7 @@ const OutlierAnalysis = ({ metrics }) => {
   useEffect(() => {
     const loadChargeData = async () => {
       try {
-        const data = await getChargeDataFromCSV();
+        const data = await getChargeDataFromEmbedded();
         setChargeData(data);
       } catch (error) {
         console.error('Error loading charge data:', error);
@@ -2738,9 +2733,9 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
         console.log('📊 Loading cost data from CSV...');
         
         const [metricsData, chargeDataCSV, dataSummary] = await Promise.all([
-          calculateMetricsFromCSV(),
-          getChargeDataFromCSV(),
-          getDataSummaryFromCSV()
+          calculateMetricsFromEmbedded(),
+          getChargeDataFromEmbedded(),
+          getDataSummaryFromEmbedded()
         ]);
         
         setMetrics(metricsData);

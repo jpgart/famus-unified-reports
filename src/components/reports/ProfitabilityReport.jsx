@@ -3,14 +3,14 @@ import { Bar, Line, Pie, Scatter } from 'react-chartjs-2';
 import 'chart.js/auto';
 import { Chart as ChartJS } from 'chart.js/auto';
 import { salesData } from '../../data/salesDataEmbedded';
-import { getChargeDataFromCSV, calculateMetricsFromCSV } from '../../data/costDataCSV';
+import { calculateMetricsFromEmbedded } from '../../data/costDataEmbedded';
 import { formatNumber, formatPercentage, formatInteger, formatCurrency, formatPrice, isPriceField, formatTotalSales } from '../../utils/formatters';
 import { getDefaultChartOptions, FAMUS_COLORS, registerChartPlugins } from '../../utils/chartConfig';
 import { KPISection } from '../common';
 
 // Data Processing Functions
 const processProfitabilityData = async () => {
-  const costMetrics = await calculateMetricsFromCSV();
+  const costMetrics = await calculateMetricsFromEmbedded();
   
   // Group sales by Lotid
   const salesByLotid = {};

@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Bar, Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 import { 
-  getInitialStockAnalysis,
-  getTopVarietiesByStock,
-  getStockDistributionByMonth,
-  validateInitialStockByExporter,
-  loadInitialStockFromCSV,
-  getConsolidatedInitialStock
-} from '../../data/costDataCSV';
+  getInitialStockAnalysisFromEmbedded,
+  getTopVarietiesByStockFromEmbedded,
+  getStockDistributionByMonthFromEmbedded
+} from '../../data/costDataEmbedded';
 import { formatNumber, formatPercentage } from '../../utils/formatters';
 import { getDefaultChartOptions, FAMUS_COLORS, BLUE_PALETTE } from '../../utils/chartConfig';
 import { KPISection } from '../common';
@@ -29,17 +26,16 @@ const InventoryReport = () => {
         setLoading(true);
         
         const [analysis, varieties, monthly] = await Promise.all([
-          getInitialStockAnalysis(),
-          getTopVarietiesByStock(8),
-          getStockDistributionByMonth()
+          getInitialStockAnalysisFromEmbedded(),
+          getTopVarietiesByStockFromEmbedded(8),
+          getStockDistributionByMonthFromEmbedded()
         ]);
         
         setStockAnalysis(analysis);
         setTopVarieties(varieties);
         setMonthlyDistribution(monthly);
         
-        // Log validation data
-        await validateInitialStockByExporter();
+        console.log('📦 Inventory analysis loaded:', analysis);
       } catch (error) {
         console.error('Error loading stock analysis:', error);
       } finally {
