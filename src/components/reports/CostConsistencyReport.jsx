@@ -12,6 +12,7 @@ import {
 import { formatNumber, formatPercentage, formatPrice } from '../../utils/formatters';
 import { getDefaultChartOptions, FAMUS_COLORS, CHART_COLORS, BLUE_PALETTE } from '../../utils/chartConfig';
 import { KPISection } from '../common';
+import { filterExportersList, isExporterExcluded } from '../../utils/dataFiltering';
 
 // Register Chart.js plugins
 import { registerChartPlugins } from '../../utils/chartConfig';
@@ -21,12 +22,12 @@ registerChartPlugins();
 const KPICards = ({ metrics }) => {
   const [selectedExporter, setSelectedExporter] = useState('All');
   
-  // Get unique exporters for filter (exclude Videxport)
+  // Get unique exporters for filter (exclude specified exporters)
   const exporters = useMemo(() => {
     const allExporters = [...new Set(Object.values(metrics).map(l => l.exporter))]
-      .filter(Boolean)
-      .filter(exporter => exporter !== 'Videxport');
-    return ['All', ...allExporters];
+      .filter(Boolean);
+    const filteredExporters = filterExportersList(allExporters);
+    return ['All', ...filteredExporters];
   }, [metrics]);
 
   const kpiData = useMemo(() => {
@@ -1666,7 +1667,7 @@ const ExternalConsistencyAnalysis = ({ metrics, chargeData }) => {
     const exporterAnalysis = {};
     
     Object.values(metrics).forEach(lot => {
-      if (!lot.exporter || lot.exporter === 'Videxport' || lot.exporter === 'Del Monte') return;
+      if (!lot.exporter || isExporterExcluded(lot.exporter)) return;
       
       if (!exporterAnalysis[lot.exporter]) {
         exporterAnalysis[lot.exporter] = {
@@ -1753,7 +1754,7 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
   // Prepare data for the table
   const tableData = useMemo(() => {
     const lots = Object.values(metrics)
-      .filter(lot => lot.exporter !== 'Videxport' && lot.exporter !== 'Del Monte')
+      .filter(lot => !isExporterExcluded(lot.exporter))
       .filter(lot => lot.costPerBox !== null);
 
     // Apply filters
@@ -1791,7 +1792,7 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
   // Get unique exporters for filter
   const exporters = useMemo(() => {
     const uniqueExporters = [...new Set(Object.values(metrics)
-      .filter(lot => lot.exporter && lot.exporter !== 'Videxport' && lot.exporter !== 'Del Monte')
+      .filter(lot => lot.exporter && !isExporterExcluded(lot.exporter))
       .map(lot => lot.exporter))];
     return ['All', ...uniqueExporters.sort()];
   }, [metrics]);
@@ -1822,7 +1823,7 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
 
     // Calculate global statistics
     const allLots = Object.values(metrics)
-      .filter(l => l.costPerBox !== null && l.exporter !== 'Videxport' && l.exporter !== 'Del Monte');
+      .filter(l => l.costPerBox !== null && !isExporterExcluded(l.exporter));
     
     const globalAvg = allLots.length > 0
       ? allLots.reduce((sum, l) => sum + l.costPerBox, 0) / allLots.length
@@ -1871,7 +1872,7 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
         .filter(c => (c.chargeName || c.Chargedescr) === type)
         .filter(c => {
           const lotOfCharge = metrics[c.lotid];
-          return lotOfCharge && lotOfCharge.exporter !== 'Videxport' && lotOfCharge.exporter !== 'Del Monte';
+          return lotOfCharge && !isExporterExcluded(lotOfCharge.exporter);
         });
       
       const globalAvgForType = globalChargesOfType.length > 0
@@ -2741,6 +2742,11 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
       try {
         setLoading(true);
         console.log('📊 Loading cost data from embedded data...');
+        
+        // Clear cache to ensure fresh data
+        clearEmbeddedDataCache();
+        console.log('🧹 Cleared embedded data cache');
+        
         console.log('🔍 Testing data access...');
         
         // Test basic data access first

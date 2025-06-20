@@ -149681,7 +149681,7 @@ export const calculateMetricsFromEmbedded = async () => {
 
 // Get charge data (for compatibility)
 export const getChargeDataFromEmbedded = async () => {
-  return embeddedCostData;
+  return filterExcludedExporters(embeddedCostData);
 };
 
 // Get data summary
@@ -149879,7 +149879,10 @@ export const getTopVarietiesByStockFromEmbedded = async (limit = 8) => {
 export const getStockDistributionByMonthFromEmbedded = async () => {
   const monthlyStock = {};
   
-  embeddedStockData.forEach(row => {
+  // Filter out excluded exporters
+  const filteredStockData = filterExcludedExporters(embeddedStockData);
+  
+  filteredStockData.forEach(row => {
     const date = new Date(row['Entry Date']);
     const monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
     const stock = parseFloat(row['Initial Stock']) || 0;

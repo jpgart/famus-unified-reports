@@ -178,7 +178,7 @@ const ProfitabilityKPIs = ({ data }) => {
           <div className="text-sm text-blue-700 space-y-1">
             <p><strong>Included in Total Costs:</strong> All operational charges including Commission, Ocean Freight, Cold Storage, Customs, Expeditor, Packing Materials, Terminal Charges, Inspections, and other operational expenses.</p>
             <p><strong>Excluded from Total Costs:</strong> Grower Advances (considered as advances, not operational costs).</p>
-            <p><strong>Excluded Exporters:</strong> Del Monte and Videxport (filtered out from analysis).</p>
+            <p><strong>Excluded Exporters:</strong> Del Monte, VIDEXPORT, and Videxport (automatically filtered out from all analyses).</p>
             <p><strong>Analysis Scope:</strong> Only lots with both sales and cost data are included in profitability calculations. Lots with only cost data (no corresponding sales) are excluded from this report.</p>
           </div>
         </div>

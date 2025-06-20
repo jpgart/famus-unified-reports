@@ -4,7 +4,8 @@ import 'chart.js/auto';
 import { 
   getInitialStockAnalysisFromEmbedded,
   getTopVarietiesByStockFromEmbedded,
-  getStockDistributionByMonthFromEmbedded
+  getStockDistributionByMonthFromEmbedded,
+  clearEmbeddedDataCache
 } from '../../data/costDataEmbedded';
 import { formatNumber, formatPercentage } from '../../utils/formatters';
 import { getDefaultChartOptions, FAMUS_COLORS, BLUE_PALETTE } from '../../utils/chartConfig';
@@ -25,6 +26,10 @@ const InventoryReport = () => {
       try {
         setLoading(true);
         console.log('📦 Loading inventory data from embedded data...');
+        
+        // Clear cache to ensure fresh data
+        clearEmbeddedDataCache();
+        console.log('🧹 Cleared embedded data cache');
         
         // Test functions individually
         console.log('🔍 Testing inventory functions...');
