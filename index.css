@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Styles */
+:root {
+  --famus-orange: #EE6C4D;
+  --famus-navy: #3D5A80;
+  --famus-blue: #98C1D9;
+  --famus-cream: #F9F6F4;
+  --famus-light-blue: #E0FBFC;
+  --famus-dark-navy: #293241;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: var(--famus-cream);
+  color: var(--famus-navy);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--famus-blue);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--famus-navy);
+}
+
+/* Loading Animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Chart Container */
+.chart-container {
+  position: relative;
+  height: 400px;
+  width: 100%;
+}
+
+/* KPI Cards */
+.kpi-card {
+  @apply bg-white rounded-lg shadow-md p-6 border-l-4 border-famus-orange;
+  transition: all 0.3s ease;
+}
+
+.kpi-card:hover {
+  @apply shadow-lg transform -translate-y-1;
+}
+
+/* Table Styles */
+.data-table {
+  @apply w-full bg-white rounded-lg shadow overflow-hidden;
+}
+
+.data-table th {
+  @apply bg-famus-navy text-famus-cream px-4 py-3 text-left font-semibold cursor-pointer;
+  transition: background-color 0.2s ease;
+}
+
+.data-table th:hover {
+  @apply bg-famus-dark-navy;
+}
+
+.data-table td {
+  @apply px-4 py-3 border-b border-gray-200;
+}
+
+.data-table tr:hover {
+  @apply bg-famus-light-blue;
+}
+
+/* Navigation */
+.nav-button {
+  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+}
+
+.nav-button.active {
+  @apply bg-famus-orange text-white shadow-md;
+}
+
+.nav-button:not(.active) {
+  @apply bg-white text-famus-navy hover:bg-famus-blue hover:text-white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chart-container {
+    height: 300px;
+  }
+  
+  .kpi-card {
+    @apply p-4;
+  }
+}
