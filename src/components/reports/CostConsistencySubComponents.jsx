@@ -6,6 +6,7 @@ import {
 import { formatNumber, formatPercentage, formatPrice, isPriceField, formatTotalSales } from '../../utils/formatters';
 import { getDefaultChartOptions, FAMUS_COLORS, CHART_COLORS } from '../../utils/chartConfig';
 import { KPISection } from '../common';
+import { filterExportersList } from '../../utils/dataFiltering';
 
 // Helper functions for specific charge analysis
 const analyzeSpecificCharge = async (chargeType, displayName) => {
@@ -39,9 +40,9 @@ export const KPICards = React.memo(({ metrics }) => {
   // Get unique exporters for filter (exclude Videxport)
   const exporters = useMemo(() => {
     const allExporters = [...new Set(Object.values(metrics).map(l => l.exporter))]
-      .filter(Boolean)
-      .filter(exporter => exporter !== 'Videxport');
-    return ['All', ...allExporters];
+      .filter(Boolean);
+    const filteredExporters = filterExportersList(allExporters);
+    return ['All', ...filteredExporters];
   }, [metrics]);
 
   const kpiData = useMemo(() => {

@@ -138,7 +138,8 @@ const InventoryReport = () => {
 
         {/* Stock Summary KPI Cards */}
         <KPISection
-          title="Initial Stock Analysis Overview"
+          title="📊 KPIs"
+          subtitle="Key Performance Indicators - Inventory Analysis"
           titleColor="text-[#3D5A80]"
           backgroundColor="bg-white"
           kpis={[
@@ -146,29 +147,49 @@ const InventoryReport = () => {
               label: 'Total Stock', 
               value: stockAnalysis.totalStock, 
               type: 'integer',
-              size: 'normal'
+              size: 'normal',
+              icon: '💰'
             },
             { 
               label: 'Total Lots', 
               value: stockAnalysis.totalLots, 
               type: 'integer',
-              size: 'normal'
+              size: 'normal',
+              icon: '📦'
             },
             { 
               label: 'Avg Stock per Lot', 
               value: stockAnalysis.avgStockPerLot, 
               type: 'decimal',
               decimals: 1,
-              size: 'normal'
+              size: 'normal',
+              icon: '⭐'
             },
             { 
               label: 'Active Exporters', 
               value: exporterData.length, 
               type: 'integer',
-              size: 'normal'
+              size: 'normal',
+              icon: '🚢'
             }
           ]}
         />
+
+        {/* Inventory Analysis Legend */}
+        <div className="mt-6 max-w-4xl mx-auto">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-blue-800 mb-2 flex items-center">
+              <span className="mr-2">ℹ️</span>
+              Inventory Analysis Methodology
+            </h4>
+            <div className="text-sm text-blue-700 space-y-1">
+              <p><strong>• Total Stock:</strong> Combined inventory across all varieties and exporters</p>
+              <p><strong>• Lot Analysis:</strong> Individual inventory batches with unique identifiers</p>
+              <p><strong>• Stock Efficiency:</strong> Average inventory per lot for optimal management</p>
+              <p><strong>• Coverage:</strong> Complete analysis of active inventory positions</p>
+            </div>
+          </div>
+        </div>
 
         {/* Charts Section */}
         <div className="grid md:grid-cols-2 gap-6 mb-6">

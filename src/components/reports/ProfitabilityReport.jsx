@@ -7,6 +7,7 @@ import { calculateMetricsFromEmbedded } from '../../data/costDataEmbedded';
 import { formatNumber, formatPercentage, formatInteger, formatCurrency, formatPrice, isPriceField, formatTotalSales } from '../../utils/formatters';
 import { getDefaultChartOptions, FAMUS_COLORS, registerChartPlugins } from '../../utils/chartConfig';
 import { KPISection } from '../common';
+import { filterExportersList } from '../../utils/dataFiltering';
 
 // Data Processing Functions
 const processProfitabilityData = async () => {
@@ -77,7 +78,8 @@ const ProfitabilityKPIs = ({ data }) => {
   
   const exporters = useMemo(() => {
     const allExporters = [...new Set(data.map(d => d.exporter))].sort();
-    return ['All', ...allExporters];
+    const filteredExporters = filterExportersList(allExporters);
+    return ['All', ...filteredExporters];
   }, [data]);
 
   const filteredData = selectedExporter === 'All' ? 
@@ -111,55 +113,51 @@ const ProfitabilityKPIs = ({ data }) => {
       label: 'Total Revenue', 
       value: kpiData.totalRevenue, 
       type: 'currency',
-      size: 'normal'
+      size: 'normal',
+      icon: '💰'
     },
     { 
       label: 'Total Costs', 
       value: kpiData.totalCosts, 
       type: 'currency',
-      size: 'normal'
+      size: 'normal',
+      icon: '📦'
     },
     { 
       label: 'Net Profit', 
       value: kpiData.totalProfit, 
       type: 'currency',
-      size: 'normal'
+      size: 'normal',
+      icon: '⭐'
     },
     { 
       label: 'Avg Profit Margin', 
       value: kpiData.avgProfitMargin, 
       type: 'integer',
-      size: 'normal'
+      size: 'normal',
+      icon: '🏪'
     },
     { 
       label: 'Avg ROI', 
       value: kpiData.avgROI, 
       type: 'integer',
-      size: 'normal'
+      size: 'normal',
+      icon: '🚢'
     },
     { 
       label: 'Profitable Lots', 
       value: `${kpiData.profitableLots}/${kpiData.totalLots}`, 
       type: 'text',
-      size: 'normal'
+      size: 'normal',
+      icon: '🍇'
     },
   ];
 
   return (
-    <div className="flex flex-col items-center my-10">
-      <div className="mb-6 flex flex-row items-center gap-3">
-        <span className="font-semibold text-lg">Exporter:</span>
-        <select 
-          value={selectedExporter} 
-          onChange={e => setSelectedExporter(e.target.value)} 
-          className="border p-2 rounded text-lg"
-        >
-          {exporters.map(e => <option key={e}>{e}</option>)}
-        </select>
-      </div>
-      
+    <div className="bg-[#F9F6F4] flex flex-col items-center my-10">
       <KPISection
-        title=""
+        title="📊 KPIs"
+        subtitle="Key Performance Indicators - Profitability Analysis"
         titleColor="text-famus-orange"
         backgroundColor="bg-transparent"
         kpis={kpis}
@@ -168,18 +166,30 @@ const ProfitabilityKPIs = ({ data }) => {
         containerClass=""
       />
       
-      {/* Cost Calculation Legend */}
+      {/* Exporter Filter */}
+      <div className="mb-6 flex flex-row items-center gap-3">
+        <span className="font-semibold text-lg text-[#3D5A80]">Filter by Exporter:</span>
+        <select 
+          value={selectedExporter} 
+          onChange={e => setSelectedExporter(e.target.value)} 
+          className="border border-famus-navy p-2 rounded text-lg bg-white focus:ring-2 focus:ring-famus-orange"
+        >
+          {exporters.map(e => <option key={e}>{e}</option>)}
+        </select>
+      </div>
+      
+      {/* Profitability Analysis Legend */}
       <div className="mt-6 max-w-4xl mx-auto">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h4 className="text-sm font-semibold text-blue-800 mb-2 flex items-center">
             <span className="mr-2">ℹ️</span>
-            Cost Calculation Methodology
+            Profitability Analysis Methodology
           </h4>
           <div className="text-sm text-blue-700 space-y-1">
-            <p><strong>Included in Total Costs:</strong> All operational charges including Commission, Ocean Freight, Cold Storage, Customs, Expeditor, Packing Materials, Terminal Charges, Inspections, and other operational expenses.</p>
-            <p><strong>Excluded from Total Costs:</strong> Grower Advances (considered as advances, not operational costs).</p>
-            <p><strong>Excluded Exporters:</strong> Del Monte, VIDEXPORT, and Videxport (automatically filtered out from all analyses).</p>
-            <p><strong>Analysis Scope:</strong> Only lots with both sales and cost data are included in profitability calculations. Lots with only cost data (no corresponding sales) are excluded from this report.</p>
+            <p><strong>• Total Costs:</strong> All operational charges including Ocean Freight, Cold Storage, Customs, Packing Materials, Terminal Charges, and Inspections</p>
+            <p><strong>• Excluded Costs:</strong> Grower Advances (considered as advances, not operational costs)</p>
+            <p><strong>• Analysis Scope:</strong> Only lots with both sales and cost data for accurate profitability calculations</p>
+            <p><strong>• Performance Metrics:</strong> ROI, profit margins, and cost efficiency analysis across all exporters</p>
           </div>
         </div>
       </div>

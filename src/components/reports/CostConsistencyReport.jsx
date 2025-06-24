@@ -7,12 +7,17 @@ import {
   getChargeDataFromEmbedded,
   getInitialStockAnalysisFromEmbedded,
   analyzeSpecificChargeFromEmbedded,
-  clearEmbeddedDataCache
+  analyzeRepackingChargesFromEmbedded
 } from '../../data/costDataEmbedded';
 import { formatNumber, formatPercentage, formatPrice } from '../../utils/formatters';
 import { getDefaultChartOptions, FAMUS_COLORS, CHART_COLORS, BLUE_PALETTE } from '../../utils/chartConfig';
 import { KPISection } from '../common';
 import { filterExportersList, isExporterExcluded } from '../../utils/dataFiltering';
+
+// Temporary clear cache function to avoid import error
+const clearEmbeddedDataCache = () => {
+  console.log('🧹 Cache clear requested (temporary implementation)');
+};
 
 // Register Chart.js plugins
 import { registerChartPlugins } from '../../utils/chartConfig';
@@ -86,37 +91,43 @@ const KPICards = ({ metrics }) => {
       label: 'Total Lot Records', 
       value: kpiData.totalLots, 
       type: 'integer',
-      size: 'normal'
+      size: 'normal',
+      icon: '📦'
     },
     { 
       label: 'Avg Cost/Box', 
       value: kpiData.avgCostPerBox, 
       type: 'money',
-      size: 'normal'
+      size: 'normal',
+      icon: '💰'
     },
     { 
       label: 'Total Charges', 
       value: kpiData.totalCharges, 
       type: 'totalSales',
-      size: 'normal'
+      size: 'normal',
+      icon: '⭐'
     },
     { 
       label: 'Total Boxes', 
       value: kpiData.totalBoxes, 
       type: 'integer',
-      size: 'normal'
+      size: 'normal',
+      icon: '🏪'
     },
     { 
       label: 'Active Exporters', 
       value: kpiData.uniqueExporters, 
       type: 'integer',
-      size: 'normal'
+      size: 'normal',
+      icon: '🚢'
     },
     { 
       label: 'Consistency Score', 
       value: kpiData.consistencyScore, 
       type: 'percentage',
-      size: 'normal'
+      size: 'normal',
+      icon: '🍇'
     },
   ];
 
@@ -171,7 +182,8 @@ const KPICards = ({ metrics }) => {
     <div className="my-10">
       {/* KPI Section */}
       <KPISection
-        title="Cost Consistency Overview Dashboard"
+        title="📊 KPIs"
+        subtitle="Key Performance Indicators - Cost Consistency Analysis"
         titleColor="text-[#EE6C4D]"
         backgroundColor="bg-[#F9F6F4]"
         kpis={kpis}
@@ -191,6 +203,22 @@ const KPICards = ({ metrics }) => {
           >
             {exporters.map(e => <option key={e} value={e}>{e}</option>)}
           </select>
+        </div>
+      </div>
+
+      {/* Cost Analysis Legend */}
+      <div className="mt-6 max-w-4xl mx-auto">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="text-sm font-semibold text-blue-800 mb-2 flex items-center">
+            <span className="mr-2">ℹ️</span>
+            Cost Analysis Methodology
+          </h4>
+          <div className="text-sm text-blue-700 space-y-1">
+            <p><strong>• Cost per Box:</strong> Total charges divided by total boxes processed</p>
+            <p><strong>• Consistency Score:</strong> Percentage of lots with complete cost data</p>
+            <p><strong>• Total Charges:</strong> Combined packing materials, repacking, and ocean freight costs</p>
+            <p><strong>• Analysis Scope:</strong> Includes all exporters with recorded charge activities</p>
+          </div>
         </div>
       </div>
 
@@ -796,23 +824,22 @@ const OceanFreightAnalysis = () => {
   );
 };
 
-// Packing Materials Analysis Component  
-const PackingMaterialsAnalysis = () => {
+// Repacking Analysis Component (combines PACKING MATERIALS + REPACKING CHARGES)
+const RepackingAnalysis = () => {
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Define the charge type and display name for packing materials
-  const chargeType = "PACKING MATERIALS";
-  const displayName = "Packing Materials";
+  // Using the combined repacking analysis function
+  const displayName = "Repacking";
 
   useEffect(() => {
     const loadAnalysis = async () => {
       try {
         setLoading(true);
-        const data = await analyzeSpecificChargeFromEmbedded(chargeType, displayName);
+        const data = await analyzeRepackingChargesFromEmbedded(displayName);
         setAnalysisData(data);
       } catch (error) {
-        console.error(`Error analyzing ${chargeType}:`, error);
+        console.error(`Error analyzing ${displayName}:`, error);
         setAnalysisData(null);
       } finally {
         setLoading(false);
@@ -820,7 +847,7 @@ const PackingMaterialsAnalysis = () => {
     };
 
     loadAnalysis();
-  }, [chargeType, displayName]);
+  }, [displayName]);
 
   if (loading) {
     return (
@@ -880,14 +907,43 @@ const PackingMaterialsAnalysis = () => {
           <div className="text-lg font-bold text-[#3D5A80]">{formatPrice(analysisData.summary?.avgPerBox || 0)}</div>
         </div>
         <div className="bg-[#F9F6F4] p-3 rounded-lg">
-          <div className="text-sm text-gray-600">Records</div>
-          <div className="text-lg font-bold text-[#3D5A80]">{formatNumber(analysisData.summary?.recordCount || 0)}</div>
+          <div className="text-sm text-gray-600">Total Lots</div>
+          <div className="text-lg font-bold text-[#3D5A80]">{formatNumber(analysisData.summary?.lotsWithCharge || 0)}</div>
         </div>
         <div className="bg-[#F9F6F4] p-3 rounded-lg">
           <div className="text-sm text-gray-600">Exporters</div>
-          <div className="text-lg font-bold text-[#3D5A80]">{formatNumber(analysisData.byExporter?.length || 0)}</div>
+          <div className="text-lg font-bold text-[#3D5A80]">{formatNumber(Object.keys(analysisData.byExporter || {}).length || 0)}</div>
         </div>
       </div>
+
+      {/* Breakdown by Charge Type */}
+      {analysisData.analysis && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h5 className="font-semibold text-blue-800 mb-3">📊 Breakdown by Charge Type</h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-3 rounded border">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">📦 Packing Materials</span>
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  {((analysisData.analysis.packingMaterialsAmount / analysisData.analysis.totalAmount) * 100).toFixed(1)}%
+                </span>
+              </div>
+              <div className="text-lg font-bold text-[#3D5A80]">{formatPrice(analysisData.analysis.packingMaterialsAmount || 0)}</div>
+              <div className="text-xs text-gray-600">{formatNumber(analysisData.analysis.packingMaterialsRecords || 0)} records</div>
+            </div>
+            <div className="bg-white p-3 rounded border">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">🔄 Repacking Charges</span>
+                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                  {((analysisData.analysis.repackingChargesAmount / analysisData.analysis.totalAmount) * 100).toFixed(1)}%
+                </span>
+              </div>
+              <div className="text-lg font-bold text-[#3D5A80]">{formatPrice(analysisData.analysis.repackingChargesAmount || 0)}</div>
+              <div className="text-xs text-gray-600">{formatNumber(analysisData.analysis.repackingChargesRecords || 0)} records</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Chart */}
       <div className="relative h-[300px] mb-4">
@@ -901,19 +957,21 @@ const PackingMaterialsAnalysis = () => {
             <tr>
               <th className="p-2 text-left">Exporter</th>
               <th className="p-2 text-right">Total Amount</th>
+              <th className="p-2 text-right">Packing Materials</th>
+              <th className="p-2 text-right">Repacking Charges</th>
               <th className="p-2 text-right">Per Box</th>
-              <th className="p-2 text-right">Records</th>
-              <th className="p-2 text-right">% of Total</th>
+              <th className="p-2 text-right">Lots</th>
             </tr>
           </thead>
           <tbody>
             {exportersArray.map((row, index) => (
               <tr key={row.exporter || `exporter-${index}`} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                 <td className="p-2 font-medium">{row.exporter || 'Unknown'}</td>
-                <td className="p-2 text-right">{formatPrice(row.totalAmount || 0)}</td>
+                <td className="p-2 text-right font-semibold">{formatPrice(row.totalAmount || 0)}</td>
+                <td className="p-2 text-right text-blue-600">{formatPrice(row.packingMaterials || 0)}</td>
+                <td className="p-2 text-right text-green-600">{formatPrice(row.repackingCharges || 0)}</td>
                 <td className="p-2 text-right">{formatPrice(row.avgPerBox || 0)}</td>
-                <td className="p-2 text-right">{formatNumber(row.recordCount || 0)}</td>
-                <td className="p-2 text-right">{formatPercentage((row.totalAmount || 0) / (analysisData.summary?.totalAmount || 1))}</td>
+                <td className="p-2 text-right">{formatNumber(row.lots || 0)}</td>
               </tr>
             ))}
           </tbody>
@@ -2730,7 +2788,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
     'Exporter Comparator': useRef(),
     'Outlier Analysis': useRef(),
     'Ocean Freight': useRef(),
-    'Packing Materials': useRef(),
+    'Repacking': useRef(),
     'Internal Consistency': useRef(),
     'External Consistency': useRef(),
     'Final Tables': useRef(),
@@ -2766,6 +2824,18 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
         
         setMetrics(metricsData);
         setChargeData(chargeDataCSV);
+        
+        // Debug: Check exporters in final state
+        const finalExporters = [...new Set(Object.values(metricsData).map(m => m.exporter))].filter(Boolean);
+        console.log('🔍 FINAL EXPORTERS IN COMPONENT STATE:', finalExporters);
+        
+        const excludedExporters = ['Del Monte', 'VIDEXPORT', 'Videxport'];
+        const foundExcluded = finalExporters.filter(exp => excludedExporters.includes(exp));
+        if (foundExcluded.length > 0) {
+          console.error('❌ EXCLUDED EXPORTERS FOUND IN COMPONENT STATE:', foundExcluded);
+        } else {
+          console.log('✅ Component state clean - no excluded exporters');
+        }
         
         console.log('📈 Cost Consistency Report loaded from embedded data');
         console.log(`📊 Analyzing ${Object.keys(metricsData).length} lot IDs`);
@@ -2936,12 +3006,12 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
           <OceanFreightAnalysis />
         </div>
 
-        {/* 7. Packing Materials Analysis */}
-        <div ref={refs['Packing Materials']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">📦 Packing Materials Analysis</h2>
+        {/* 7. Repacking Analysis */}
+        <div ref={refs['Repacking']}>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">📦 Repacking Analysis</h2>
           <p className="text-gray-600 mb-4 text-sm">Combined analysis of packing materials and repacking charges, identifying cost efficiency in packaging operations.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Detailed examination of packaging costs, material efficiency, and repacking optimization opportunities.</p>
-          <PackingMaterialsAnalysis />
+          <RepackingAnalysis />
         </div>
 
         {/* 8. Internal Consistency Analysis */}

@@ -30,6 +30,7 @@ ChartJS.register(
 
 const KPISection = ({ 
   title = "Dashboard Overview",
+  subtitle = null,
   titleColor = "text-famus-orange",
   backgroundColor = "bg-gray-50",
   kpis = [],
@@ -129,9 +130,16 @@ const KPISection = ({
   return (
     <section className={`${backgroundColor} py-8 px-4 ${containerClass}`}>
       {/* Title */}
-      <h2 className={`text-3xl font-bold ${titleColor} text-center mb-8`}>
+      <h2 className={`text-3xl font-bold ${titleColor} text-center mb-2`}>
         {title}
       </h2>
+      
+      {/* Subtitle */}
+      {subtitle && (
+        <p className="text-center text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
+          {subtitle}
+        </p>
+      )}
 
       {/* KPI Cards */}
       {kpis.length > 0 && (

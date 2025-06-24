@@ -8,6 +8,7 @@ import { getUnique, filterData, groupBy } from '../../utils/dataProcessing';
 import { formatNumber, formatPrice, isPriceField, isTotalSalesField, formatTotalSales } from '../../utils/formatters';
 import { getDefaultChartOptions, FAMUS_COLORS, registerChartPlugins } from '../../utils/chartConfig';
 import { KPISection } from '../common';
+import { filterExportersList } from '../../utils/dataFiltering';
 
 // Combined chart with dual Y-axis
 const getChartData = (data, xKey, barKey, lineKey) => {
@@ -48,7 +49,9 @@ const getChartData = (data, xKey, barKey, lineKey) => {
 // KPICards: tarjetas de KPIs grandes, centradas y filtrables por Exporter
 const KPICards = ({ data }) => {
   const [selectedExporter, setSelectedExporter] = React.useState('All');
-  const exporters = ['All', ...Array.from(new Set(data.map(r => r['Exporter Clean'])).values()).filter(Boolean)];
+  const allExporters = Array.from(new Set(data.map(r => r['Exporter Clean'])).values()).filter(Boolean);
+  const filteredExporters = filterExportersList(allExporters);
+  const exporters = ['All', ...filteredExporters];
   const filtered = selectedExporter === 'All' ? data : data.filter(r => r['Exporter Clean'] === selectedExporter);
   
   if (!data.length) return null;
@@ -67,37 +70,43 @@ const KPICards = ({ data }) => {
       label: 'Total Sales', 
       value: totalSales, 
       type: 'totalSales',
-      size: 'normal'
+      size: 'normal',
+      icon: '💰'
     },
     { 
       label: 'Total Quantity', 
       value: totalQty, 
       type: 'integer',
-      size: 'normal'
+      size: 'normal',
+      icon: '📦'
     },
     { 
       label: 'Avg. Four Star Price', 
       value: avgPrice, 
       type: 'money',
-      size: 'normal'
+      size: 'normal',
+      icon: '⭐'
     },
     { 
       label: 'Retailers', 
       value: uniqueRetailers, 
       type: 'integer',
-      size: 'normal'
+      size: 'normal',
+      icon: '🏪'
     },
     { 
       label: 'Exporters', 
       value: uniqueExporters, 
       type: 'integer',
-      size: 'normal'
+      size: 'normal',
+      icon: '🚢'
     },
     { 
       label: 'Varieties', 
       value: uniqueVarieties, 
       type: 'integer',
-      size: 'normal'
+      size: 'normal',
+      icon: '🍇'
     },
   ];
 
@@ -138,7 +147,8 @@ const KPICards = ({ data }) => {
     <div className="my-10">
       {/* KPI Section */}
       <KPISection
-        title="Sales Overview Dashboard"
+        title="📊 KPIs"
+        subtitle="Key Performance Indicators - Sales Analysis"
         titleColor="text-famus-orange"
         backgroundColor="bg-[#F9F6F4]"
         kpis={kpis}
@@ -158,6 +168,22 @@ const KPICards = ({ data }) => {
           >
             {exporters.map(e => <option key={e} value={e}>{e}</option>)}
           </select>
+        </div>
+      </div>
+
+      {/* Sales Analysis Legend */}
+      <div className="mt-6 max-w-4xl mx-auto">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="text-sm font-semibold text-blue-800 mb-2 flex items-center">
+            <span className="mr-2">ℹ️</span>
+            Sales Analysis Methodology
+          </h4>
+          <div className="text-sm text-blue-700 space-y-1">
+            <p><strong>• Total Sales:</strong> Combined revenue from all recorded transactions</p>
+            <p><strong>• Four Star Price:</strong> Premium pricing tier for highest quality grapes</p>
+            <p><strong>• Analysis Scope:</strong> Includes all varieties, exporters, and retail channels</p>
+            <p><strong>• Data Coverage:</strong> Complete sales performance across all market segments</p>
+          </div>
         </div>
       </div>
 

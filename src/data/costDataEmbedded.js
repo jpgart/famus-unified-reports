@@ -15,6 +15,152 @@ const filterExcludedExporters = (data) => {
 
 // ...existing code...
 
+// Analyze combined repacking charges (PACKING MATERIALS + REPACKING CHARGES)
+export const analyzeRepackingChargesFromEmbedded = async (displayName = 'Repacking') => {
+  console.log(`📊 Analyzing ${displayName} charges (PACKING MATERIALS + REPACKING CHARGES) from embedded data...`);
+  
+  // Filter out excluded exporters first
+  const filteredData = filterExcludedExporters(embeddedCostData);
+  
+  // Get both types of charges
+  const packingMaterialsData = filteredData.filter(row => 
+    row.Chargedescr === 'PACKING MATERIALS' && row.Chgamt > 0
+  );
+  
+  const repackingChargesData = filteredData.filter(row => 
+    row.Chargedescr === 'REPACKING CHARGES' && row.Chgamt > 0
+  );
+  
+  // Combine both datasets
+  const combinedData = [...packingMaterialsData, ...repackingChargesData];
+  
+  if (combinedData.length === 0) {
+    return {
+      analysis: {
+        totalAmount: 0,
+        totalRecords: 0,
+        avgChargePerLot: 0,
+        lotsWithCharge: 0,
+        avgChargeAmount: 0,
+        packingMaterialsAmount: 0,
+        repackingChargesAmount: 0,
+        packingMaterialsRecords: 0,
+        repackingChargesRecords: 0
+      },
+      outliers: [],
+      byExporter: {},
+      summary: {
+        totalAmount: 0,
+        avgPerBox: 0,
+        lotsWithCharge: 0,
+        totalRecords: 0
+      }
+    };
+  }
+  
+  // Group by lot to avoid double counting
+  const chargeByLot = {};
+  let packingMaterialsTotal = 0;
+  let repackingChargesTotal = 0;
+  
+  combinedData.forEach(row => {
+    const lotid = row.Lotid;
+    const chargeType = row.Chargedescr;
+    
+    if (!chargeByLot[lotid]) {
+      chargeByLot[lotid] = {
+        lotid,
+        exporter: row['Exporter Clean'],
+        packingMaterials: 0,
+        repackingCharges: 0,
+        totalCharge: 0,
+        records: 0
+      };
+    }
+    
+    if (chargeType === 'PACKING MATERIALS') {
+      chargeByLot[lotid].packingMaterials += row.Chgamt;
+      packingMaterialsTotal += row.Chgamt;
+    } else if (chargeType === 'REPACKING CHARGES') {
+      chargeByLot[lotid].repackingCharges += row.Chgamt;
+      repackingChargesTotal += row.Chgamt;
+    }
+    
+    chargeByLot[lotid].totalCharge += row.Chgamt;
+    chargeByLot[lotid].records += 1;
+  });
+  
+  const lots = Object.values(chargeByLot);
+  const totalAmount = lots.reduce((sum, lot) => sum + lot.totalCharge, 0);
+  const avgChargePerLot = lots.length > 0 ? totalAmount / lots.length : 0;
+  
+  // Find outliers (charges > 2 standard deviations from mean)
+  const charges = lots.map(lot => lot.totalCharge);
+  const mean = avgChargePerLot;
+  const stdDev = Math.sqrt(charges.reduce((sum, charge) => sum + Math.pow(charge - mean, 2), 0) / charges.length);
+  const outliers = lots.filter(lot => Math.abs(lot.totalCharge - mean) > 2 * stdDev);
+  
+  // Group by exporter
+  const byExporter = {};
+  lots.forEach(lot => {
+    const exporter = lot.exporter;
+    if (!byExporter[exporter]) {
+      byExporter[exporter] = {
+        exporter,
+        totalAmount: 0,
+        packingMaterials: 0,
+        repackingCharges: 0,
+        totalBoxes: 0,
+        lots: 0,
+        avgCharge: 0,
+        avgPerBox: 0
+      };
+    }
+    byExporter[exporter].totalAmount += lot.totalCharge;
+    byExporter[exporter].packingMaterials += lot.packingMaterials;
+    byExporter[exporter].repackingCharges += lot.repackingCharges;
+    byExporter[exporter].lots += 1;
+    
+    // Find initial stock for this lot to calculate per-box cost
+    const stockData = embeddedCostData.find(row => row.Lotid === lot.lotid);
+    const initialStock = stockData ? (stockData['Initial Stock'] || 0) : 0;
+    byExporter[exporter].totalBoxes += initialStock;
+  });
+  
+  // Calculate averages
+  Object.values(byExporter).forEach(exp => {
+    exp.avgCharge = exp.lots > 0 ? exp.totalAmount / exp.lots : 0;
+    exp.avgPerBox = exp.totalBoxes > 0 ? exp.totalAmount / exp.totalBoxes : 0;
+    exp.totalCharge = exp.totalAmount; // Add this for compatibility
+  });
+  
+  // Calculate overall summary
+  const totalBoxes = Object.values(byExporter).reduce((sum, exp) => sum + exp.totalBoxes, 0);
+  const avgPerBox = totalBoxes > 0 ? totalAmount / totalBoxes : 0;
+
+  return {
+    analysis: {
+      totalAmount,
+      totalRecords: combinedData.length,
+      avgChargePerLot,
+      lotsWithCharge: lots.length,
+      avgChargeAmount: combinedData.reduce((sum, row) => sum + row.Chgamt, 0) / combinedData.length,
+      packingMaterialsAmount: packingMaterialsTotal,
+      repackingChargesAmount: repackingChargesTotal,
+      packingMaterialsRecords: packingMaterialsData.length,
+      repackingChargesRecords: repackingChargesData.length
+    },
+    summary: {
+      totalAmount,
+      avgPerBox,
+      lotsWithCharge: lots.length,
+      totalRecords: combinedData.length
+    },
+    outliers,
+    byExporter
+  };
+};
+
 export const embeddedCostData = [
   {
     "Lotid": "24A0005623",
@@ -149761,19 +149907,32 @@ export const analyzeSpecificChargeFromEmbedded = async (chargeType, displayName)
       byExporter[exporter] = {
         exporter,
         totalAmount: 0,
+        totalBoxes: 0,
         lots: 0,
-        avgCharge: 0
+        avgCharge: 0,
+        avgPerBox: 0
       };
     }
     byExporter[exporter].totalAmount += lot.totalCharge;
     byExporter[exporter].lots += 1;
+    
+    // Find initial stock for this lot to calculate per-box cost
+    const stockData = embeddedCostData.find(row => row.Lotid === lot.lotid);
+    const initialStock = stockData ? (stockData['Initial Stock'] || 0) : 0;
+    byExporter[exporter].totalBoxes += initialStock;
   });
   
   // Calculate averages
   Object.values(byExporter).forEach(exp => {
     exp.avgCharge = exp.lots > 0 ? exp.totalAmount / exp.lots : 0;
+    exp.avgPerBox = exp.totalBoxes > 0 ? exp.totalAmount / exp.totalBoxes : 0;
+    exp.totalCharge = exp.totalAmount; // Add this for compatibility
   });
   
+  // Calculate overall summary
+  const totalBoxes = Object.values(byExporter).reduce((sum, exp) => sum + exp.totalBoxes, 0);
+  const avgPerBox = totalBoxes > 0 ? totalAmount / totalBoxes : 0;
+
   return {
     analysis: {
       totalAmount,
@@ -149781,6 +149940,12 @@ export const analyzeSpecificChargeFromEmbedded = async (chargeType, displayName)
       avgChargePerLot,
       lotsWithCharge: lots.length,
       avgChargeAmount: chargeData.reduce((sum, row) => sum + row.Chgamt, 0) / chargeData.length
+    },
+    summary: {
+      totalAmount,
+      avgPerBox,
+      lotsWithCharge: lots.length,
+      totalRecords: chargeData.length
     },
     outliers,
     byExporter
@@ -149791,6 +149956,8 @@ export const analyzeSpecificChargeFromEmbedded = async (chargeType, displayName)
 export const getInitialStockAnalysisFromEmbedded = async () => {
   const stockByLot = {};
   const stockByExporter = {};
+  const uniqueExporters = new Set();
+  const uniqueVarieties = new Set();
   
   // Filter out excluded exporters
   const filteredStockData = filterExcludedExporters(embeddedStockData);
@@ -149798,7 +149965,12 @@ export const getInitialStockAnalysisFromEmbedded = async () => {
   filteredStockData.forEach(row => {
     const lotid = row.Lotid;
     const exporter = row['Exporter Clean'];
+    const variety = row.Variety;
     const stock = parseFloat(row['Initial Stock']) || 0;
+    
+    // Track unique values
+    if (exporter) uniqueExporters.add(exporter);
+    if (variety) uniqueVarieties.add(variety);
     
     if (!stockByLot[lotid]) {
       stockByLot[lotid] = {
@@ -149827,12 +149999,19 @@ export const getInitialStockAnalysisFromEmbedded = async () => {
   const totalStock = lots.reduce((sum, lot) => sum + lot.totalStock, 0);
   const avgStockPerLot = lots.length > 0 ? totalStock / lots.length : 0;
   
+  // Get top varieties
+  const topVarieties = await getTopVarietiesByStockFromEmbedded(8);
+  
   return {
-    totalLots: lots.length,
+    totalLotids: lots.length,  // Frontend expects totalLotids
     totalStock,
-    avgStockPerLot,
+    avgPerLot: Math.round(avgStockPerLot),  // Frontend expects avgPerLot (rounded)
+    varieties: uniqueVarieties.size,  // Frontend expects varieties
+    uniqueExporters: uniqueExporters.size,
+    uniqueVarieties: uniqueVarieties.size,
     lots,
-    byExporter: stockByExporter
+    byExporter: stockByExporter,
+    topVarieties: topVarieties  // Add top varieties for table
   };
 };
 
