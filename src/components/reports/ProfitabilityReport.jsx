@@ -153,11 +153,11 @@ const ProfitabilityKPIs = ({ data }) => {
         title="KPIs"
         subtitle="Key Performance Indicators - Profitability Analysis"
         titleColor="text-famus-orange"
-        backgroundColor="bg-transparent"
+        backgroundColor="bg-[#F9F6F4]"
         kpis={kpis}
         chart={null}
         showChart={false}
-        containerClass=""
+        containerClass="rounded-xl"
       />
       
       {/* Exporter Filter */}

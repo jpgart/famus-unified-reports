@@ -165,7 +165,7 @@ const InventoryReport = ({ onRefsUpdate }) => {
 
         {/* Stock Summary KPI Cards */}
         <KPISection
-          title="� KPIs"
+          title="KPIs"
           subtitle="Key Performance Indicators - Inventory Analysis"
           titleColor="text-[#3D5A80]"
           backgroundColor="bg-[#F9F6F4]"
