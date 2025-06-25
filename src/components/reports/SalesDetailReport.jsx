@@ -70,43 +70,37 @@ const KPICards = ({ data }) => {
       label: 'Total Sales', 
       value: totalSales, 
       type: 'totalSales',
-      size: 'normal',
-      icon: '💰'
+      size: 'normal'
     },
     { 
       label: 'Total Quantity', 
       value: totalQty, 
       type: 'integer',
-      size: 'normal',
-      icon: '📦'
+      size: 'normal'
     },
     { 
       label: 'Avg. Four Star Price', 
       value: avgPrice, 
       type: 'money',
-      size: 'normal',
-      icon: '⭐'
+      size: 'normal'
     },
     { 
       label: 'Retailers', 
       value: uniqueRetailers, 
       type: 'integer',
-      size: 'normal',
-      icon: '🏪'
+      size: 'normal'
     },
     { 
       label: 'Exporters', 
       value: uniqueExporters, 
       type: 'integer',
-      size: 'normal',
-      icon: '🚢'
+      size: 'normal'
     },
     { 
       label: 'Varieties', 
       value: uniqueVarieties, 
       type: 'integer',
-      size: 'normal',
-      icon: '🍇'
+      size: 'normal'
     },
   ];
 

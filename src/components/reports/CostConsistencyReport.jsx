@@ -91,43 +91,37 @@ const KPICards = ({ metrics }) => {
       label: 'Total Lot Records', 
       value: kpiData.totalLots, 
       type: 'integer',
-      size: 'normal',
-      icon: '📦'
+      size: 'normal'
     },
     { 
       label: 'Avg Cost/Box', 
       value: kpiData.avgCostPerBox, 
       type: 'money',
-      size: 'normal',
-      icon: '💰'
+      size: 'normal'
     },
     { 
       label: 'Total Charges', 
       value: kpiData.totalCharges, 
       type: 'totalSales',
-      size: 'normal',
-      icon: '⭐'
+      size: 'normal'
     },
     { 
       label: 'Total Boxes', 
       value: kpiData.totalBoxes, 
       type: 'integer',
-      size: 'normal',
-      icon: '🏪'
+      size: 'normal'
     },
     { 
       label: 'Active Exporters', 
       value: kpiData.uniqueExporters, 
       type: 'integer',
-      size: 'normal',
-      icon: '🚢'
+      size: 'normal'
     },
     { 
       label: 'Consistency Score', 
       value: kpiData.consistencyScore, 
       type: 'percentage',
-      size: 'normal',
-      icon: '🍇'
+      size: 'normal'
     },
   ];
 

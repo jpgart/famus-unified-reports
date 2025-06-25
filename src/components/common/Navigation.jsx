@@ -7,62 +7,58 @@ const Navigation = ({ activeReport, onReportChange, sectionRefs, onSectionScroll
     { 
       id: 'sales', 
       name: 'Sales Detail Report', 
-      icon: '📊',
       sections: [
-        { id: 'KPIs', name: 'KPIs', icon: '📈' },
-        { id: 'Key Insights', name: 'Key Insights', icon: '💡' },
-        { id: 'Exporter Comparator', name: 'Exporter Comparator', icon: '⚖️' },
-        { id: 'Sales by Variety', name: 'Sales by Variety', icon: '🍇' },
-        { id: 'Sales Timeline', name: 'Sales Timeline', icon: '📅' },
-        { id: 'Price History Retailer', name: 'Price History (Retailer)', icon: '📊' },
-        { id: 'Price History Exporter', name: 'Price History (Exporter)', icon: '📈' },
-        { id: 'Heatmap Retailer vs Variety', name: 'Heatmap: Retailer / Variety', icon: '🔥' },
-        { id: 'Heatmap Exporter vs Retailer', name: 'Heatmap: Exporter / Retailer', icon: '🗺️' },
-        { id: 'Exporter-Retailer Analysis', name: 'Top 5 Analysis', icon: '🏆' },
-        { id: 'Ranking Retailers', name: 'Top Retailers by Sales', icon: '🥇' },
-        { id: 'Ranking Exporters', name: 'Top Exporters by Sales', icon: '🚢' },
-        { id: 'Sales by Retailer/Exporter/Variety/Size', name: 'Filtered Sales Analysis', icon: '🔍' },
-        { id: 'Price Alerts by Variety', name: 'Price Alerts', icon: '⚠️' },
+        { id: 'KPIs', name: 'KPIs' },
+        { id: 'Key Insights', name: 'Key Insights' },
+        { id: 'Exporter Comparator', name: 'Exporter Comparator' },
+        { id: 'Sales by Variety', name: 'Sales by Variety' },
+        { id: 'Sales Timeline', name: 'Sales Timeline' },
+        { id: 'Price History Retailer', name: 'Price History (Retailer)' },
+        { id: 'Price History Exporter', name: 'Price History (Exporter)' },
+        { id: 'Heatmap Retailer vs Variety', name: 'Heatmap: Retailer / Variety' },
+        { id: 'Heatmap Exporter vs Retailer', name: 'Heatmap: Exporter / Retailer' },
+        { id: 'Exporter-Retailer Analysis', name: 'Top 5 Analysis' },
+        { id: 'Ranking Retailers', name: 'Top Retailers by Sales' },
+        { id: 'Ranking Exporters', name: 'Top Exporters by Sales' },
+        { id: 'Sales by Retailer/Exporter/Variety/Size', name: 'Filtered Sales Analysis' },
+        { id: 'Price Alerts by Variety', name: 'Price Alerts' },
       ]
     },
     { 
       id: 'cost', 
       name: 'Cost Consistency Report', 
-      icon: '💰',
       sections: [
-        { id: 'KPIs', name: 'KPI Overview', icon: '📊' },
-        { id: 'Key Insights', name: 'Key Insights', icon: '💡' },
-        { id: 'Exporter Comparator', name: 'Exporter Comparator', icon: '⚖️' },
-        { id: 'Outlier Analysis', name: 'Outlier Analysis', icon: '⚠️' },
-        { id: 'Grower Advances', name: 'Grower Advances', icon: '🌾' },
-        { id: 'Ocean Freight', name: 'Ocean Freight', icon: '🚢' },
-        { id: 'Packing Materials', name: 'Packing Materials', icon: '📦' },
-        { id: 'Internal Consistency', name: 'Internal Consistency', icon: '🔍' },
-        { id: 'External Consistency', name: 'External Consistency', icon: '⚖️' },
-        { id: 'Final Tables', name: 'Final Cost Tables', icon: '📊' },
-        { id: 'Summary Table', name: 'Tabla Resumen Integral', icon: '📋' },
+        { id: 'KPIs', name: 'KPI Overview' },
+        { id: 'Key Insights', name: 'Key Insights' },
+        { id: 'Exporter Comparator', name: 'Exporter Comparator' },
+        { id: 'Outlier Analysis', name: 'Outlier Analysis' },
+        { id: 'Grower Advances', name: 'Grower Advances' },
+        { id: 'Ocean Freight', name: 'Ocean Freight' },
+        { id: 'Packing Materials', name: 'Packing Materials' },
+        { id: 'Internal Consistency', name: 'Internal Consistency' },
+        { id: 'External Consistency', name: 'External Consistency' },
+        { id: 'Final Tables', name: 'Final Cost Tables' },
+        { id: 'Summary Table', name: 'Tabla Resumen Integral' },
       ]
     },
     { 
       id: 'profitability', 
       name: 'Profitability Analysis', 
-      icon: '💰',
       sections: [
-        { id: 'KPIs', name: 'Profitability KPIs', icon: '💰' },
-        { id: 'Top Performers', name: 'Performance Rankings', icon: '🏆' },
-        { id: 'Variety Analysis', name: 'Variety Analysis', icon: '🍇' },
-        { id: 'Exporter Analysis', name: 'Exporter Analysis', icon: '🚢' },
+        { id: 'KPIs', name: 'Profitability KPIs' },
+        { id: 'Top Performers', name: 'Performance Rankings' },
+        { id: 'Variety Analysis', name: 'Variety Analysis' },
+        { id: 'Exporter Analysis', name: 'Exporter Analysis' },
       ]
     },
     { 
       id: 'inventory', 
       name: 'Inventory Report', 
-      icon: '📦',
       sections: [
-        { id: 'Initial Stock', name: 'Initial Stock Analysis', icon: '📊' },
-        { id: 'Variety Details', name: 'Variety Details', icon: '🍇' },
-        { id: 'Exporter Analysis', name: 'Exporter Analysis', icon: '🚢' },
-        { id: 'Monthly Distribution', name: 'Monthly Distribution', icon: '📅' },
+        { id: 'Initial Stock', name: 'Initial Stock Analysis' },
+        { id: 'Variety Details', name: 'Variety Details' },
+        { id: 'Exporter Analysis', name: 'Exporter Analysis' },
+        { id: 'Monthly Distribution', name: 'Monthly Distribution' },
       ]
     },
   ];
@@ -93,7 +89,6 @@ const Navigation = ({ activeReport, onReportChange, sectionRefs, onSectionScroll
                     : 'border-transparent text-gray-500 hover:text-famus-navy hover:border-gray-300'
                 }`}
               >
-                <span className="text-lg">{report.icon}</span>
                 <span>{report.name}</span>
                 <span className="text-xs">▼</span>
               </button>
@@ -110,7 +105,6 @@ const Navigation = ({ activeReport, onReportChange, sectionRefs, onSectionScroll
                       onClick={() => handleSectionClick(section.id)}
                       className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-famus-orange transition-colors duration-150 flex items-center space-x-2"
                     >
-                      <span className="text-sm">{section.icon}</span>
                       <span>{section.name}</span>
                     </button>
                   ))}

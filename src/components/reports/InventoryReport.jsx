@@ -147,30 +147,26 @@ const InventoryReport = () => {
               label: 'Total Stock', 
               value: stockAnalysis.totalStock, 
               type: 'integer',
-              size: 'normal',
-              icon: '💰'
+              size: 'normal'
             },
             { 
               label: 'Total Lots', 
               value: stockAnalysis.totalLots, 
               type: 'integer',
-              size: 'normal',
-              icon: '📦'
+              size: 'normal'
             },
             { 
               label: 'Avg Stock per Lot', 
               value: stockAnalysis.avgStockPerLot, 
               type: 'decimal',
               decimals: 1,
-              size: 'normal',
-              icon: '⭐'
+              size: 'normal'
             },
             { 
               label: 'Active Exporters', 
               value: exporterData.length, 
               type: 'integer',
-              size: 'normal',
-              icon: '🚢'
+              size: 'normal'
             }
           ]}
         />

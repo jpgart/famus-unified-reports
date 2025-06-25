@@ -113,43 +113,37 @@ const ProfitabilityKPIs = ({ data }) => {
       label: 'Total Revenue', 
       value: kpiData.totalRevenue, 
       type: 'currency',
-      size: 'normal',
-      icon: '💰'
+      size: 'normal'
     },
     { 
       label: 'Total Costs', 
       value: kpiData.totalCosts, 
       type: 'currency',
-      size: 'normal',
-      icon: '📦'
+      size: 'normal'
     },
     { 
       label: 'Net Profit', 
       value: kpiData.totalProfit, 
       type: 'currency',
-      size: 'normal',
-      icon: '⭐'
+      size: 'normal'
     },
     { 
       label: 'Avg Profit Margin', 
       value: kpiData.avgProfitMargin, 
       type: 'integer',
-      size: 'normal',
-      icon: '🏪'
+      size: 'normal'
     },
     { 
       label: 'Avg ROI', 
       value: kpiData.avgROI, 
       type: 'integer',
-      size: 'normal',
-      icon: '🚢'
+      size: 'normal'
     },
     { 
       label: 'Profitable Lots', 
       value: `${kpiData.profitableLots}/${kpiData.totalLots}`, 
       type: 'text',
-      size: 'normal',
-      icon: '🍇'
+      size: 'normal'
     },
   ];
 
@@ -553,26 +547,26 @@ const ProfitabilityReport = () => {
         </div>
 
       {/* KPI Cards */}
-      <div>
+      <div id="KPIs">
         <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Profitability KPIs</h2>
         <p className="text-gray-600 mb-4 text-sm">Key profitability metrics showing overall financial performance, profit margins, and return on investment.</p>
         <ProfitabilityKPIs data={profitabilityData} />
       </div>
 
       {/* Top/Bottom Performers */}
-      <div>
+      <div id="Top Performers">
         <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Performance Rankings</h2>
         <p className="text-gray-600 mb-4 text-sm">Rankings of individual lots by profitability, identifying top performers and opportunities for improvement. ROI (Return on Investment) is calculated as: (Total Profit / Total Operational Costs) × 100.</p>
         <TopBottomPerformers data={profitabilityData} />
       </div>
 
       {/* Variety Analysis */}
-      <div>
+      <div id="Variety Analysis">
         <VarietyAnalysis data={profitabilityData} />
       </div>
 
       {/* Exporter Analysis */}
-      <div>
+      <div id="Exporter Analysis">
         <ExporterAnalysis data={profitabilityData} />
       </div>
       </div>

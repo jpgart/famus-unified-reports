@@ -106,28 +106,24 @@ export const KPICards = React.memo(({ metrics }) => {
     {
       title: "Total Lot IDs",
       value: formatNumber(kpiData.totalLots),
-      icon: "📦",
       color: "bg-blue-500",
       description: `Analyzing ${kpiData.totalLots} unique lot records`
     },
     {
       title: "Total Charges",
       value: formatPrice(kpiData.totalCharges),
-      icon: "💰",
       color: "bg-green-500",
       description: "Sum of all charge amounts across lots"
     },
     {
       title: "Average Cost/Box",
       value: formatPrice(kpiData.avgCostPerBox),
-      icon: "📊",
       color: "bg-purple-500",
       description: "Mean cost per box across all valid records"
     },
     {
       title: "Consistency Score",
       value: `${formatNumber(kpiData.consistencyScore)}%`,
-      icon: "🎯",
       color: kpiData.consistencyScore >= 80 ? "bg-green-500" : 
              kpiData.consistencyScore >= 60 ? "bg-yellow-500" : "bg-red-500",
       description: "Cost consistency rating (higher is better)"
@@ -135,7 +131,6 @@ export const KPICards = React.memo(({ metrics }) => {
     {
       title: "Data Quality",
       value: `${formatNumber(kpiData.dataQuality)}%`,
-      icon: "✅",
       color: kpiData.dataQuality >= 90 ? "bg-green-500" : 
              kpiData.dataQuality >= 70 ? "bg-yellow-500" : "bg-red-500",
       description: "Percentage of records with valid cost data"
@@ -143,21 +138,18 @@ export const KPICards = React.memo(({ metrics }) => {
     {
       title: "Total Boxes",
       value: formatNumber(kpiData.totalBoxes),
-      icon: "📋",
       color: "bg-indigo-500",
       description: "Total box count across all lots"
     },
     {
       title: "Exporters",
       value: formatNumber(kpiData.exporterCount),
-      icon: "🏢",
       color: "bg-orange-500",
       description: "Number of unique exporters"
     },
     {
       title: "Charge Types",
       value: formatNumber(kpiData.chargeTypeCount),
-      icon: "🏷️",
       color: "bg-pink-500",
       description: "Number of different charge categories"
     }
@@ -183,13 +175,8 @@ export const KPICards = React.memo(({ metrics }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpiCards.map((kpi, index) => (
           <div key={index} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-l-famus-orange">
-            <div className="flex items-center justify-between mb-3">
-              <div className={`${kpi.color} text-white p-3 rounded-full text-xl`}>
-                {kpi.icon}
-              </div>
-            </div>
             <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">{kpi.title}</h3>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{kpi.value}</p>
+            <p className="text-2xl font-bold text-gray-900 mt-3">{kpi.value}</p>
             <p className="text-xs text-gray-600 mt-2">{kpi.description}</p>
           </div>
         ))}
