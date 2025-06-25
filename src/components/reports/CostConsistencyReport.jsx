@@ -216,18 +216,7 @@ const KPICards = ({ metrics }) => {
         </div>
       </div>
 
-      {/* Chart Section */}
-      {selectedExporter === 'All' && (
-        <div className="bg-white rounded-2xl shadow-md p-6 mx-auto max-w-6xl">
-          <div className="relative h-[400px] sm:h-[500px] md:h-[600px]">
-            <Bar data={chart.data} options={chart.options} />
-          </div>
-          <div className="mt-4 text-center text-gray-600 text-sm bg-gray-50 p-3 rounded-lg">
-            <p className="font-semibold mb-1">Cost Efficiency Analysis by Exporter</p>
-            <p>This chart displays the average cost per box for each exporter. Lower costs indicate better operational efficiency and cost management practices.</p>
-          </div>
-        </div>
-      )}
+      {/* Chart Section - REMOVED: First bar chart no longer needed */}
     </div>
   );
 };
@@ -498,6 +487,24 @@ const ExporterCostComparator = ({ metrics }) => {
 
   const chartOptions = {
     ...getDefaultChartOptions('Cost vs Consistency by Exporter'),
+    plugins: {
+      ...getDefaultChartOptions('Cost vs Consistency by Exporter').plugins,
+      zoom: {
+        zoom: {
+          wheel: {
+            enabled: false,
+          },
+          pinch: {
+            enabled: false
+          },
+          mode: 'xy',
+        },
+        pan: {
+          enabled: false,
+          mode: 'xy'
+        }
+      }
+    },
     scales: {
       y: {
         type: 'linear',

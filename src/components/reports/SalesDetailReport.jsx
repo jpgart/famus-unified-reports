@@ -141,7 +141,7 @@ const KPICards = ({ data }) => {
     <div className="my-10">
       {/* KPI Section */}
       <KPISection
-        title="� KPIs"
+        title="KPIs"
         subtitle="Key Performance Indicators - Sales Analysis"
         titleColor="text-famus-orange"
         backgroundColor="bg-[#F9F6F4]"
