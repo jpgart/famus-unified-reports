@@ -4,20 +4,22 @@ Contains testing scripts and utilities for validating application functionality.
 
 ## Files Overview
 
-- `test-all-components.js` - Tests all React components
-- `test-all-sections.js` - Tests all report sections
-- `test-cost-functions.js` - Tests cost calculation functions
-- `test-data.js` - Tests data integrity and structure
-- `test-data-loading.js` - Tests data loading mechanisms
-- `test-filtering.js` - Tests filtering functionality
-- `test-inventory.js` - Tests inventory calculations
-- `test-csv.js` - Tests CSV data processing
-- `test-browser.html` - Browser-based testing interface
+- `test-all-components.js` - Tests all React components (4.8KB)
+- `test-all-sections.js` - Tests all report sections (2.3KB)
+- `test-csv.js` - Tests CSV data processing (2.7KB)
+- `test-data-loading.js` - Tests data loading mechanisms (1.1KB)
+- `test-filtering.js` - Tests filtering functionality (2.9KB)
+- `test-inventory.js` - Tests inventory calculations (1.3KB)
 
 ## Usage
 
 Run from project root:
 
 ```bash
-node scripts/tests/test-data.js
+# Using npm scripts (recommended)
+npm run test:all    # Run all component tests
+npm run test:data   # Test data integrity
+
+# Or run directly
+node scripts/tests/test-all-components.js
 ```

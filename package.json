@@ -13,11 +13,11 @@
     "lint": "eslint src/",
     "format": "prettier --write src/",
     "test:all": "node scripts/tests/test-all-components.js",
-    "test:data": "node scripts/tests/test-data.js",
+    "test:csv": "node scripts/tests/test-csv.js",
     "verify:full": "node scripts/verification/verify-full-report.js",
     "verify:consistency": "node scripts/verification/verify-complete-analysis.js",
     "debug:charges": "node scripts/debug/debug-charge-types.js",
-    "build:clean": "node scripts/build/clean-data.js"
+    "build:analyze-data": "node scripts/build/analyze_data_overlap.js"
   },
   "dependencies": {
     "chart.js": "^4.5.0",
