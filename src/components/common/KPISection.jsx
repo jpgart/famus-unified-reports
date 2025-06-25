@@ -128,23 +128,23 @@ const KPISection = ({
   };
 
   return (
-    <section className={`${backgroundColor} py-8 px-4 ${containerClass}`}>
+    <section className={`${backgroundColor} py-6 sm:py-8 px-2 sm:px-4 lg:px-6 ${containerClass}`}>
       {/* Title */}
-      <h2 className={`text-3xl font-bold ${titleColor} text-center mb-2`}>
+      <h2 className={`text-2xl sm:text-3xl font-bold ${titleColor} text-center mb-2`}>
         {title}
       </h2>
       
       {/* Subtitle */}
       {subtitle && (
-        <p className="text-center text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
+        <p className="text-center text-gray-600 text-base sm:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
           {subtitle}
         </p>
       )}
 
       {/* KPI Cards */}
       {kpis.length > 0 && (
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="grid grid-cols-3 gap-6 mb-6">
+        <div className="w-full max-w-7xl mx-auto mb-8 px-2 sm:px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 mb-6">
             {kpis.slice(0, 3).map((kpi, idx) => (
               <KPICard
                 key={idx}
@@ -157,19 +157,21 @@ const KPISection = ({
               />
             ))}
           </div>
-          <div className="grid grid-cols-3 gap-6">
-            {kpis.slice(3, 6).map((kpi, idx) => (
-              <KPICard
-                key={idx + 3}
-                title={kpi.label || kpi.title}
-                value={kpi.value}
-                type={kpi.type || 'number'}
-                change={kpi.change}
-                changeType={kpi.changeType}
-                size={kpi.size || 'normal'}
-              />
-            ))}
-          </div>
+          {kpis.length > 3 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+              {kpis.slice(3, 6).map((kpi, idx) => (
+                <KPICard
+                  key={idx + 3}
+                  title={kpi.label || kpi.title}
+                  value={kpi.value}
+                  type={kpi.type || 'number'}
+                  change={kpi.change}
+                  changeType={kpi.changeType}
+                  size={kpi.size || 'normal'}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

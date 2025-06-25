@@ -49,45 +49,45 @@ const KPICard = ({
   const getSizeClasses = () => {
     switch (size) {
       case 'small':
-        return 'w-full px-3 py-2 sm:px-4 sm:py-3';
+        return 'w-full px-4 py-3 sm:px-5 sm:py-4 min-h-[100px] sm:min-h-[110px]';
       case 'large':
-        return 'w-full px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6';
+        return 'w-full px-5 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6 min-h-[130px] sm:min-h-[140px] lg:min-h-[150px]';
       case 'normal':
       default:
-        return 'w-full px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-4';
+        return 'w-full px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-5 min-h-[120px] sm:min-h-[130px] lg:min-h-[140px]';
     }
   };
 
   const getValueSizeClass = () => {
     switch (size) {
       case 'small':
-        return 'text-lg sm:text-xl';
+        return 'text-lg sm:text-xl lg:text-2xl';
       case 'large':
-        return 'text-xl sm:text-2xl lg:text-3xl';
+        return 'text-2xl sm:text-3xl lg:text-4xl';
       case 'normal':
       default:
-        return 'text-lg sm:text-xl lg:text-2xl';
+        return 'text-xl sm:text-2xl lg:text-3xl';
     }
   };
 
   const getTitleSizeClass = () => {
     switch (size) {
       case 'small':
-        return 'text-xs sm:text-sm';
+        return 'text-xs sm:text-sm lg:text-base';
       case 'large':
-        return 'text-sm sm:text-base';
+        return 'text-sm sm:text-base lg:text-lg';
       case 'normal':
       default:
-        return 'text-xs sm:text-sm';
+        return 'text-xs sm:text-sm lg:text-base';
     }
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-md ${getSizeClasses()} text-center hover:shadow-lg transition-all duration-200 border border-gray-100`}>
-      <div className={`${getValueSizeClass()} font-bold text-famus-navy mb-1 leading-tight`}>
+    <div className={`bg-white rounded-xl shadow-md ${getSizeClasses()} text-center hover:shadow-lg transition-all duration-200 border border-gray-100 flex flex-col justify-center`}>
+      <div className={`${getValueSizeClass()} font-bold text-famus-navy mb-2 leading-tight break-words`}>
         {formatValue()}
       </div>
-      <div className={`${getTitleSizeClass()} text-famus-navy uppercase tracking-wide font-medium leading-tight`}>
+      <div className={`${getTitleSizeClass()} text-famus-navy uppercase tracking-wide font-medium leading-tight break-words px-1`}>
         {title}
       </div>
       {change !== null && change !== undefined && (

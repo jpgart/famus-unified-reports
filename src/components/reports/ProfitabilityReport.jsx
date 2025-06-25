@@ -150,7 +150,7 @@ const ProfitabilityKPIs = ({ data }) => {
   return (
     <div className="bg-[#F9F6F4] flex flex-col items-center my-10">
       <KPISection
-        title="📊 KPIs"
+        title="KPIs"
         subtitle="Key Performance Indicators - Profitability Analysis"
         titleColor="text-famus-orange"
         backgroundColor="bg-transparent"
