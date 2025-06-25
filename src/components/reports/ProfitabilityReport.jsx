@@ -494,19 +494,29 @@ const ProfitabilityReport = ({ onRefsUpdate }) => {
   const [profitabilityData, setProfitabilityData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Create refs for navigation
-  const sectionRefs = {
+  // Create refs for navigation using useRef to ensure they persist
+  const sectionRefs = useRef({
     'KPIs': useRef(null),
     'Top Performers': useRef(null),
     'Variety Analysis': useRef(null),
     'Exporter Analysis': useRef(null),
-  };
+  }).current;
 
   // Update parent component with refs
   useEffect(() => {
-    if (onRefsUpdate) {
-      onRefsUpdate(sectionRefs);
-    }
+    console.log('📊 ProfitabilityReport useEffect for refs update');
+    console.log('📊 onRefsUpdate exists:', !!onRefsUpdate);
+    console.log('📊 sectionRefs keys:', Object.keys(sectionRefs));
+    
+    // Use setTimeout to ensure refs are ready after render
+    const timeoutId = setTimeout(() => {
+      if (onRefsUpdate) {
+        console.log('📊 Calling onRefsUpdate with refs (delayed)');
+        onRefsUpdate(sectionRefs);
+      }
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [onRefsUpdate]);
 
   useEffect(() => {

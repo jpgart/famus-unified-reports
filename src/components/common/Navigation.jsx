@@ -64,8 +64,17 @@ const Navigation = ({ activeReport, onReportChange, sectionRefs, onSectionScroll
   ];
 
   const handleSectionClick = (sectionId) => {
+    console.log('🔍 Navigation handleSectionClick called:', sectionId);
+    console.log('🔍 onSectionScroll exists:', !!onSectionScroll);
+    console.log('🔍 sectionRefs exists:', !!sectionRefs);
+    console.log('🔍 sectionRefs for this ID:', sectionRefs ? sectionRefs[sectionId] : 'no sectionRefs');
+    console.log('🔍 All available refs:', sectionRefs ? Object.keys(sectionRefs) : 'no sectionRefs');
+    
     if (onSectionScroll && sectionRefs && sectionRefs[sectionId]) {
+      console.log('✅ Calling onSectionScroll for:', sectionId);
       onSectionScroll(sectionId);
+    } else {
+      console.log('❌ Cannot scroll - missing requirements');
     }
     setHoveredReport(null);
   };
