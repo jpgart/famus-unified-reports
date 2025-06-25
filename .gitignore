@@ -1,12 +1,19 @@
+# Famus Unified Reports - Git Ignore Configuration
+# Updated: 2025-06-27
+# Version: 3.0 - Enhanced for production deployment
+
 # Dependencies
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json.bak
+.pnpm-debug.log*
 
 # Production builds
 dist/
 build/
+out/
 
 # Runtime data
 pids
@@ -16,6 +23,7 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
+.nyc_output/
 
 # IDE files
 .vscode/
@@ -23,6 +31,8 @@ coverage/
 *.swp
 *.swo
 *~
+.project
+.settings/
 
 # OS generated files
 .DS_Store
@@ -32,6 +42,7 @@ coverage/
 .Trashes
 ehthumbs.db
 Thumbs.db
+Icon?
 
 # Environment variables
 .env
@@ -39,13 +50,24 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+.env.staging
 
 # Logs
 logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
 
 # Optional npm cache directory
 .npm
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
 
 # Optional REPL history
 .node_repl_history
@@ -80,6 +102,42 @@ pip-delete-this-directory.txt
 # Temporary files
 *.tmp
 *.temp
+.cache/
+.parcel-cache/
 
 # Bundle analyzer
 bundle-analyzer-report.html
+stats.json
+
+# Testing
+.nyc_output/
+coverage/
+test-results/
+playwright-report/
+
+# Deployment
+.vercel/
+.netlify/
+
+# Debug files
+debug.log
+error.log
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# MacOS specific
+.AppleDouble
+.LSOverride
+
+# Windows specific
+*.lnk
+$RECYCLE.BIN/
+
+# Linux specific
+*~
+.fuse_hidden*
+.directory
+.Trash-*

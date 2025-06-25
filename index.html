@@ -1,15 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Famus Unified Reports</title>
+    <meta name="description" content="Famus Unified Reports v3.0 - Análisis avanzado de datos con reportes interactivos y visualizaciones en tiempo real">
+    <meta name="keywords" content="famus, reports, analytics, data visualization, business intelligence, dashboard">
+    <meta name="author" content="JP - Famus Analytics">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jpgart.github.io/famus-unified-reports/">
+    <meta property="og:title" content="Famus Unified Reports v3.0">
+    <meta property="og:description" content="Análisis avanzado de datos con reportes interactivos y visualizaciones en tiempo real">
+    <meta property="og:image" content="/Page PP Logo.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://jpgart.github.io/famus-unified-reports/">
+    <meta property="twitter:title" content="Famus Unified Reports v3.0">
+    <meta property="twitter:description" content="Análisis avanzado de datos con reportes interactivos y visualizaciones en tiempo real">
+    <meta property="twitter:image" content="/Page PP Logo.png">
+    
+    <title>Famus Unified Reports v3.0 - Analytics Dashboard</title>
     <link rel="icon" type="image/png" href="/Page PP Logo.png">
+    <link rel="apple-touch-icon" href="/Page PP Logo.png">
+    
+    <!-- Preconnect to fonts for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#EE6C4D">
+    <meta name="msapplication-TileColor" content="#EE6C4D">
+    
+    <!-- Performance hints -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <!-- Loading fallback -->
+        <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: Inter, sans-serif;">
+            <div style="text-align: center;">
+                <div style="width: 48px; height: 48px; border: 4px solid #98C1D9; border-top: 4px solid #EE6C4D; border-radius: 50%; margin: 0 auto 16px; animation: spin 1s linear infinite;"></div>
+                <p style="color: #3D5A80; font-size: 18px; font-weight: 500;">Cargando Famus Reports...</p>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </body>
 </html>

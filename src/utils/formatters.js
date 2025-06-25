@@ -1,3 +1,9 @@
+/**
+ * Famus Unified Reports - Formatting Utilities
+ * Updated: 2025-06-27
+ * Version: 3.0 - Enhanced formatting with internationalization support
+ */
+
 // Number and currency formatting utilities
 export const formatNumber = (num, isMoney = false) => {
   if (num === undefined || num === null || isNaN(num)) return 'N/A';

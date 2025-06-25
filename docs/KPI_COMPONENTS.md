@@ -1,6 +1,17 @@
-# KPI Components Documentation
+# KPI Components Documentation v3.0
+
+**Actualizado:** 27 de junio de 2025  
+**Versión:** 3.0 - Enhanced KPI system with modern design and accessibility
 
 Este documento describe cómo usar los nuevos componentes KPI en el sistema unificado de reportes Famus.
+
+## Novedades en v3.0
+
+- 🎨 **Diseño mejorado** con nuevas variables CSS y sistema de colores extendido
+- ♿ **Accesibilidad mejorada** con focus states y contraste optimizado  
+- 📱 **Responsive design** mejorado para dispositivos móviles
+- ⚡ **Rendimiento optimizado** con lazy loading y memoización
+- 🛡️ **Manejo de errores** robusto con fallbacks visuales
 
 ## Componentes Principales
 
