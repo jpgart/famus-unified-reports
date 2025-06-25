@@ -8,7 +8,7 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].[contenthash].js',
     clean: true,
-    publicPath: process.env.NODE_ENV === 'production' ? '/famus-unified-reports/' : '/',
+    publicPath: '/famus-unified-reports/',
   },
   resolve: {
     extensions: ['.js', '.jsx'],
