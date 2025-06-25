@@ -31,14 +31,9 @@ const InventoryReport = ({ onRefsUpdate }) => {
 
   // Update parent component with refs
   useEffect(() => {
-    console.log('📦 InventoryReport useEffect for refs update');
-    console.log('📦 onRefsUpdate exists:', !!onRefsUpdate);
-    console.log('📦 sectionRefs keys:', Object.keys(sectionRefs));
-    
     // Use setTimeout to ensure refs are ready after render
     const timeoutId = setTimeout(() => {
       if (onRefsUpdate) {
-        console.log('📦 Calling onRefsUpdate with refs (delayed)');
         onRefsUpdate(sectionRefs);
       }
     }, 100);

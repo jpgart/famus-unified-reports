@@ -38,24 +38,15 @@ function App() {
   }, []);
 
   const handleSectionScroll = (sectionId) => {
-    console.log('🎯 App handleSectionScroll called:', sectionId);
-    console.log('🎯 Available sectionRefs:', Object.keys(sectionRefs));
-    console.log('🎯 Target ref exists:', !!sectionRefs[sectionId]);
-    console.log('🎯 Target ref current exists:', sectionRefs[sectionId] ? !!sectionRefs[sectionId].current : false);
-    
     if (sectionRefs[sectionId] && sectionRefs[sectionId].current) {
-      console.log('✅ Scrolling to section:', sectionId);
       sectionRefs[sectionId].current.scrollIntoView({ 
         behavior: 'smooth',
         block: 'start'
       });
-    } else {
-      console.log('❌ Cannot scroll - ref not found or current is null');
     }
   };
 
   const handleRefsUpdate = (refs) => {
-    console.log('📝 App handleRefsUpdate called with refs:', Object.keys(refs));
     setSectionRefs(refs);
   };
 
