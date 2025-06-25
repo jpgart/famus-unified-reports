@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bar, Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 import { 
@@ -15,11 +15,26 @@ import { KPISection } from '../common';
 import { registerChartPlugins } from '../../utils/chartConfig';
 registerChartPlugins();
 
-const InventoryReport = () => {
+const InventoryReport = ({ onRefsUpdate }) => {
   const [stockAnalysis, setStockAnalysis] = useState(null);
   const [topVarieties, setTopVarieties] = useState([]);
   const [monthlyDistribution, setMonthlyDistribution] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Create refs for navigation
+  const sectionRefs = {
+    'Initial Stock': useRef(null),
+    'Variety Details': useRef(null),
+    'Exporter Analysis': useRef(null),
+    'Monthly Distribution': useRef(null),
+  };
+
+  // Update parent component with refs
+  useEffect(() => {
+    if (onRefsUpdate) {
+      onRefsUpdate(sectionRefs);
+    }
+  }, [onRefsUpdate]);
 
   useEffect(() => {
     const loadStockAnalysis = async () => {
@@ -130,7 +145,7 @@ const InventoryReport = () => {
         </div>
 
       {/* Main Content */}
-      <div className="bg-[#F9F6F4] rounded-2xl p-6 shadow-md">
+      <div ref={sectionRefs['Initial Stock']} className="bg-[#F9F6F4] rounded-2xl p-6 shadow-md">
         <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2 flex items-center">
           <span className="mr-3">📊</span>
           Initial Stock Analysis
@@ -215,7 +230,7 @@ const InventoryReport = () => {
           </div>
 
           {/* Monthly Distribution Chart */}
-          <div className="bg-white p-4 rounded-lg shadow-sm">
+          <div ref={sectionRefs['Monthly Distribution']} className="bg-white p-4 rounded-lg shadow-sm">
             <h4 className="text-lg font-semibold text-[#EE6C4D] mb-3">Stock Distribution by Month</h4>
             <div className="h-64">
               <Line data={monthlyChartData} options={{
@@ -253,7 +268,7 @@ const InventoryReport = () => {
         </div>
 
         {/* Exporter Stock Analysis Table - Heatmap Style */}
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div ref={sectionRefs['Exporter Analysis']} className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="px-4 py-3 bg-[#3D5A80] text-white border-b">
             <h4 className="text-lg font-semibold">Stock Analysis by Exporter</h4>
           </div>
@@ -295,7 +310,7 @@ const InventoryReport = () => {
         </div>
 
         {/* Variety Details - Heatmap Style */}
-        <div className="mt-6 bg-white rounded-lg shadow-sm overflow-hidden">
+        <div ref={sectionRefs['Variety Details']} className="mt-6 bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="px-4 py-3 bg-[#3D5A80] text-white border-b">
             <h4 className="text-lg font-semibold">Top Varieties Details</h4>
           </div>

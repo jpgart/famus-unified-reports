@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Bar, Line, Pie, Scatter } from 'react-chartjs-2';
 import 'chart.js/auto';
 import { Chart as ChartJS } from 'chart.js/auto';
@@ -484,7 +484,7 @@ const ExporterAnalysis = ({ data }) => {
 };
 
 // Main Profitability Report Component
-const ProfitabilityReport = () => {
+const ProfitabilityReport = ({ onRefsUpdate }) => {
   const [expandedSections, setExpandedSections] = useState({
     kpis: true,
     performers: true,
@@ -493,6 +493,21 @@ const ProfitabilityReport = () => {
   });
   const [profitabilityData, setProfitabilityData] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Create refs for navigation
+  const sectionRefs = {
+    'KPIs': useRef(null),
+    'Top Performers': useRef(null),
+    'Variety Analysis': useRef(null),
+    'Exporter Analysis': useRef(null),
+  };
+
+  // Update parent component with refs
+  useEffect(() => {
+    if (onRefsUpdate) {
+      onRefsUpdate(sectionRefs);
+    }
+  }, [onRefsUpdate]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -547,26 +562,26 @@ const ProfitabilityReport = () => {
         </div>
 
       {/* KPI Cards */}
-      <div id="KPIs">
+      <div ref={sectionRefs['KPIs']} id="KPIs">
         <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Profitability KPIs</h2>
         <p className="text-gray-600 mb-4 text-sm">Key profitability metrics showing overall financial performance, profit margins, and return on investment.</p>
         <ProfitabilityKPIs data={profitabilityData} />
       </div>
 
       {/* Top/Bottom Performers */}
-      <div id="Top Performers">
+      <div ref={sectionRefs['Top Performers']} id="Top Performers">
         <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Performance Rankings</h2>
         <p className="text-gray-600 mb-4 text-sm">Rankings of individual lots by profitability, identifying top performers and opportunities for improvement. ROI (Return on Investment) is calculated as: (Total Profit / Total Operational Costs) × 100.</p>
         <TopBottomPerformers data={profitabilityData} />
       </div>
 
       {/* Variety Analysis */}
-      <div id="Variety Analysis">
+      <div ref={sectionRefs['Variety Analysis']} id="Variety Analysis">
         <VarietyAnalysis data={profitabilityData} />
       </div>
 
       {/* Exporter Analysis */}
-      <div id="Exporter Analysis">
+      <div ref={sectionRefs['Exporter Analysis']} id="Exporter Analysis">
         <ExporterAnalysis data={profitabilityData} />
       </div>
       </div>
