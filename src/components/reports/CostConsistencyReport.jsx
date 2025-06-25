@@ -176,7 +176,7 @@ const KPICards = ({ metrics }) => {
     <div className="my-10">
       {/* KPI Section */}
       <KPISection
-        title="📊 KPIs"
+        title="KPIs"
         subtitle="Key Performance Indicators - Cost Consistency Analysis"
         titleColor="text-[#EE6C4D]"
         backgroundColor="bg-[#F9F6F4]"
@@ -187,13 +187,13 @@ const KPICards = ({ metrics }) => {
       />
 
       {/* Exporter Filter */}
-      <div className="flex justify-center my-8">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-lg text-[#3D5A80]">Filter by Exporter:</span>
+      <div className="flex flex-col sm:flex-row justify-center items-center my-8 gap-4">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <span className="font-semibold text-lg text-[#3D5A80] text-center sm:text-left">Filter by Exporter:</span>
           <select 
             value={selectedExporter} 
             onChange={e => setSelectedExporter(e.target.value)} 
-            className="border border-[#3D5A80] p-2 rounded text-lg bg-white focus:ring-2 focus:ring-[#EE6C4D]"
+            className="border border-[#3D5A80] p-2 rounded text-lg bg-white focus:ring-2 focus:ring-[#EE6C4D] w-full sm:w-auto min-w-[200px]"
           >
             {exporters.map(e => <option key={e} value={e}>{e}</option>)}
           </select>
@@ -641,11 +641,18 @@ const OceanFreightAnalysis = () => {
     // Convert byExporter object to array
     const exportersArray = Object.values(freightData.byExporter);
     
+    // For Chilean exporters (MDT, Agrovita, Quintay), Ocean freight should be very similar
+    // Use a more sensitive threshold of 15% for these exporters
+    const chileanExporters = ['MDT', 'AGROVITA', 'QUINTAY'];
+    
     exportersArray.forEach(exporter => {
       const deviation = Math.abs(exporter.avgPerBox - avgFreight);
       const percentageDeviation = avgFreight > 0 ? (deviation / avgFreight) * 100 : 0;
       
-      if (percentageDeviation > 30) { // More than 30% deviation
+      // Use stricter threshold for Chilean exporters (15%) vs others (30%)
+      const threshold = chileanExporters.includes(exporter.exporter?.toUpperCase()) ? 15 : 30;
+      
+      if (percentageDeviation > threshold) {
         inconsistencies.push({
           exporter: exporter.exporter,
           cost: exporter.avgPerBox,
@@ -708,7 +715,7 @@ const OceanFreightAnalysis = () => {
       
       {/* KPI Section */}
       <KPISection
-        title="🚢 Ocean Freight KPIs"
+        title="Ocean Freight KPIs"
         subtitle="Key metrics for ocean freight cost analysis"
         titleColor="text-[#3D5A80]"
         backgroundColor="bg-white"
@@ -740,7 +747,7 @@ const OceanFreightAnalysis = () => {
         ]}
         chart={null}
         showChart={false}
-        containerClass=""
+        containerClass="rounded-xl"
       />
 
       {/* Chart */}
@@ -939,7 +946,7 @@ const RepackingAnalysis = () => {
       
       {/* KPI Section */}
       <KPISection
-        title="📦 Repacking KPIs"
+        title="Repacking KPIs"
         subtitle="Key metrics for repacking and packing materials analysis"
         titleColor="text-[#3D5A80]"
         backgroundColor="bg-white"
@@ -1065,6 +1072,7 @@ const OutlierAnalysis = ({ metrics }) => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [chargeData, setChargeData] = useState([]);
+  const [filterExporter, setFilterExporter] = useState('All');
   const itemsPerPage = 15;
 
   // Load charge data when component mounts
@@ -1131,7 +1139,12 @@ const OutlierAnalysis = ({ metrics }) => {
     
     // Define outliers as values beyond 2 standard deviations
     const threshold = 2;
-    const outliers = lotids.filter(l => Math.abs(l.costPerBox - mean) > threshold * stdDev);
+    let outliers = lotids.filter(l => Math.abs(l.costPerBox - mean) > threshold * stdDev);
+    
+    // Apply exporter filter
+    if (filterExporter !== 'All') {
+      outliers = outliers.filter(l => l.exporter === filterExporter);
+    }
     
     const stats = {
       mean,
@@ -1143,7 +1156,17 @@ const OutlierAnalysis = ({ metrics }) => {
     };
 
     return { outliers, stats };
-  }, [metrics]);
+  }, [metrics, filterExporter]);
+
+  // Get unique exporters for filter
+  const availableExporters = useMemo(() => {
+    const allOutliers = Object.values(metrics).filter(l => 
+      l.costPerBox !== null && 
+      Math.abs(l.costPerBox - (outlierAnalysis.stats?.mean || 0)) > 2 * (outlierAnalysis.stats?.stdDev || 1)
+    );
+    const exporters = [...new Set(allOutliers.map(l => l.exporter))].filter(Boolean);
+    return ['All', ...exporters.sort()];
+  }, [metrics, outlierAnalysis.stats]);
 
   if (!outlierAnalysis.stats) {
     return (
@@ -1316,8 +1339,23 @@ const OutlierAnalysis = ({ metrics }) => {
       {/* Outlier Details Table with Pagination */}
       {outlierAnalysis.outliers.length > 0 && (
         <div className="bg-white rounded-lg overflow-hidden shadow-sm">
-          <div className="bg-[#EE6C4D] text-white p-3">
+          <div className="bg-[#EE6C4D] text-white p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <h4 className="font-semibold">Detailed Outlier Analysis ({outlierAnalysis.outliers.length} total outliers)</h4>
+            <div className="flex items-center gap-2">
+              <span className="text-sm">Filter by Exporter:</span>
+              <select 
+                value={filterExporter} 
+                onChange={e => {
+                  setFilterExporter(e.target.value);
+                  setCurrentPage(1); // Reset to first page when filtering
+                }}
+                className="border border-white bg-white text-gray-800 p-1 rounded text-sm focus:ring-2 focus:ring-white"
+              >
+                {availableExporters.map(exp => (
+                  <option key={exp} value={exp}>{exp}</option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="overflow-auto max-h-96">
             <table className="w-full text-sm">
