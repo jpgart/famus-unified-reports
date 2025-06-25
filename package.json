@@ -1,7 +1,7 @@
 {
   "name": "famus-unified-reports",
-  "version": "2.0.0",
-  "description": "Unified interactive reports for Famus data analysis",
+  "version": "3.0.0",
+  "description": "Advanced unified interactive reports for Famus data analysis with enhanced UI and comprehensive analytics",
   "private": true,
   "homepage": "https://jpgart.github.io/famus-unified-reports",
   "scripts": {
@@ -52,8 +52,24 @@
     "reports",
     "analytics",
     "react",
-    "charts"
+    "charts",
+    "data-visualization",
+    "business-intelligence",
+    "dashboard",
+    "cost-analysis",
+    "profitability"
   ],
   "author": "JP",
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jpgart/famus-unified-reports.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jpgart/famus-unified-reports/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
 }

@@ -2,14 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global Styles */
+/* Famus Unified Reports - Global Styles */
+/* Updated: 2025-06-27 */
+/* Version: 3.0 - Enhanced color palette and modern CSS variables */
+
 :root {
+  /* Primary Brand Colors */
   --famus-orange: #EE6C4D;
   --famus-navy: #3D5A80;
   --famus-blue: #98C1D9;
   --famus-cream: #F9F6F4;
   --famus-light-blue: #E0FBFC;
   --famus-dark-navy: #293241;
+  
+  /* Extended Palette for Enhanced UI */
+  --famus-success: #4CAF50;
+  --famus-warning: #FF9800;
+  --famus-error: #F44336;
+  --famus-info: #2196F3;
+  
+  /* Neutral Grays */
+  --famus-gray-50: #F8FAFC;
+  --famus-gray-100: #F1F5F9;
+  --famus-gray-200: #E2E8F0;
+  --famus-gray-300: #CBD5E1;
+  --famus-gray-500: #64748B;
+  --famus-gray-700: #334155;
+  --famus-gray-900: #0F172A;
+  
+  /* Spacing and Layout */
+  --famus-border-radius: 0.5rem;
+  --famus-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --famus-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --famus-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
 * {
@@ -124,5 +149,102 @@ body {
   
   .kpi-card {
     @apply p-4;
+  }
+}
+
+/* Enhanced Components for Modern UI */
+.famus-gradient {
+  background: linear-gradient(135deg, var(--famus-orange) 0%, var(--famus-navy) 100%);
+}
+
+.famus-glass {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Focus States for Accessibility */
+.focus-ring:focus {
+  outline: 2px solid var(--famus-orange);
+  outline-offset: 2px;
+}
+
+/* Enhanced Button Styles */
+.btn-primary {
+  background-color: var(--famus-orange);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--famus-border-radius);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: #d45a3d;
+  transform: translateY(-1px);
+  box-shadow: var(--famus-shadow-md);
+}
+
+.btn-secondary {
+  background-color: var(--famus-navy);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--famus-border-radius);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: var(--famus-dark-navy);
+  transform: translateY(-1px);
+  box-shadow: var(--famus-shadow-md);
+}
+
+/* Status Indicators */
+.status-success {
+  color: var(--famus-success);
+  background-color: rgba(76, 175, 80, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--famus-border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-warning {
+  color: var(--famus-warning);
+  background-color: rgba(255, 152, 0, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--famus-border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-error {
+  color: var(--famus-error);
+  background-color: rgba(244, 67, 54, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--famus-border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .chart-container {
+    height: auto;
+    page-break-inside: avoid;
   }
 }
