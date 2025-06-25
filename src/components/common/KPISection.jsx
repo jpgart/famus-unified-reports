@@ -153,7 +153,6 @@ const KPISection = ({
                 type={kpi.type || 'number'}
                 change={kpi.change}
                 changeType={kpi.changeType}
-                icon={kpi.icon}
                 size={kpi.size || 'normal'}
               />
             ))}
@@ -167,7 +166,6 @@ const KPISection = ({
                 type={kpi.type || 'number'}
                 change={kpi.change}
                 changeType={kpi.changeType}
-                icon={kpi.icon}
                 size={kpi.size || 'normal'}
               />
             ))}
