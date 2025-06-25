@@ -168,7 +168,7 @@ const InventoryReport = ({ onRefsUpdate }) => {
           title="� KPIs"
           subtitle="Key Performance Indicators - Inventory Analysis"
           titleColor="text-[#3D5A80]"
-          backgroundColor="bg-white"
+          backgroundColor="bg-[#F9F6F4]"
           kpis={[
             { 
               label: 'Total Stock', 
@@ -185,8 +185,7 @@ const InventoryReport = ({ onRefsUpdate }) => {
             { 
               label: 'Avg Stock per Lot', 
               value: kpiValues.avgStockPerLot, 
-              type: 'decimal',
-              decimals: 1,
+              type: 'number',
               size: 'normal'
             },
             { 
@@ -196,6 +195,9 @@ const InventoryReport = ({ onRefsUpdate }) => {
               size: 'normal'
             }
           ]}
+          chart={null}
+          showChart={false}
+          containerClass="rounded-xl"
         />
 
         {/* Inventory Analysis Legend */}
