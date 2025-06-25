@@ -905,6 +905,11 @@ const RepackingAnalysis = () => {
   // Convert byExporter object to array for chart data
   const exportersArray = Object.values(analysisData.byExporter);
 
+  // Debug logs for repacking data structure
+  console.log('🔍 Repacking Debug - analysisData:', analysisData);
+  console.log('🔍 Repacking Debug - analysisData.analysis:', analysisData.analysis);
+  console.log('🔍 Repacking Debug - Available keys:', analysisData.analysis ? Object.keys(analysisData.analysis) : 'No analysis object');
+
   const chartData = {
     labels: exportersArray.map(e => e.exporter),
     datasets: [
@@ -940,13 +945,13 @@ const RepackingAnalysis = () => {
           },
           { 
             label: 'Packing Materials', 
-            value: analysisData.analysis?.['PACKING MATERIALS']?.totalAmount || 0, 
+            value: analysisData.analysis?.packingMaterialsAmount || 0, 
             type: 'currency',
             size: 'normal'
           },
           { 
             label: 'Repacking Charges', 
-            value: analysisData.analysis?.['REPACKING']?.totalAmount || 0, 
+            value: analysisData.analysis?.repackingChargesAmount || 0, 
             type: 'currency',
             size: 'normal'
           },
@@ -971,7 +976,8 @@ const RepackingAnalysis = () => {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700">📦 Packing Materials</span>
                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                  {((analysisData.analysis.packingMaterialsAmount / analysisData.analysis.totalAmount) * 100).toFixed(1)}%
+                  {analysisData.analysis.totalAmount > 0 ? 
+                    ((analysisData.analysis.packingMaterialsAmount / analysisData.analysis.totalAmount) * 100).toFixed(1) : 0}%
                 </span>
               </div>
               <div className="text-lg font-bold text-[#3D5A80]">{formatPrice(analysisData.analysis.packingMaterialsAmount || 0)}</div>
@@ -981,7 +987,8 @@ const RepackingAnalysis = () => {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700">🔄 Repacking Charges</span>
                 <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                  {((analysisData.analysis.repackingChargesAmount / analysisData.analysis.totalAmount) * 100).toFixed(1)}%
+                  {analysisData.analysis.totalAmount > 0 ? 
+                    ((analysisData.analysis.repackingChargesAmount / analysisData.analysis.totalAmount) * 100).toFixed(1) : 0}%
                 </span>
               </div>
               <div className="text-lg font-bold text-[#3D5A80]">{formatPrice(analysisData.analysis.repackingChargesAmount || 0)}</div>
@@ -1526,6 +1533,9 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [filterExporter, setFilterExporter] = useState('');
+  const [filterIssueType, setFilterIssueType] = useState('');
+  const [filterSeverity, setFilterSeverity] = useState('');
   const itemsPerPage = 15;
 
   const consistencyData = useMemo(() => {
@@ -1601,6 +1611,32 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
     });
   }, [metrics]);
 
+  // Filter issues based on selected filters
+  const filteredIssues = useMemo(() => {
+    return consistencyData.filter(issue => {
+      const matchesExporter = !filterExporter || issue.exporter.toLowerCase().includes(filterExporter.toLowerCase());
+      const matchesIssueType = !filterIssueType || issue.type === filterIssueType;
+      const matchesSeverity = !filterSeverity || issue.severity === filterSeverity;
+      return matchesExporter && matchesIssueType && matchesSeverity;
+    });
+  }, [consistencyData, filterExporter, filterIssueType, filterSeverity]);
+
+  // Get unique values for filters
+  const uniqueExporters = [...new Set(consistencyData.map(issue => issue.exporter))].sort();
+  const uniqueIssueTypes = [...new Set(consistencyData.map(issue => issue.type))].sort();
+  const uniqueSeverities = [...new Set(consistencyData.map(issue => issue.severity))].sort();
+
+  // Count issues by exporter
+  const issuesByExporter = useMemo(() => {
+    const counts = {};
+    consistencyData.forEach(issue => {
+      counts[issue.exporter] = (counts[issue.exporter] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 10); // Top 10 exporters with most issues
+  }, [consistencyData]);
+
   // Get details for a specific issue
   const getIssueDetails = (lotId) => {
     const lot = metrics[lotId];
@@ -1618,9 +1654,14 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
   };
 
   // Pagination
-  const totalPages = Math.ceil(consistencyData.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = consistencyData.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedData = filteredIssues.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterExporter, filterIssueType, filterSeverity]);
 
   const handleIssueClick = (issue) => {
     const details = getIssueDetails(issue.lotId);
@@ -1635,8 +1676,81 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-800">Internal Consistency Issues</h3>
         <div className="text-sm text-gray-600">
-          {consistencyData.length} issues found
+          {filteredIssues.length} of {consistencyData.length} issues shown
         </div>
+      </div>
+
+      {/* Issues by Exporter Summary */}
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <h4 className="text-sm font-semibold text-blue-800 mb-3">📊 Issues by Exporter (Top 10)</h4>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+          {issuesByExporter.map(([exporter, count]) => (
+            <div key={exporter} className="bg-white p-2 rounded border">
+              <div className="font-medium text-gray-700 truncate" title={exporter}>{exporter}</div>
+              <div className="text-blue-600 font-bold">{count} issues</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3">🔍 Filters</h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Exporter</label>
+            <select
+              value={filterExporter}
+              onChange={(e) => setFilterExporter(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Exporters</option>
+              {uniqueExporters.map(exporter => (
+                <option key={exporter} value={exporter}>{exporter}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Issue Type</label>
+            <select
+              value={filterIssueType}
+              onChange={(e) => setFilterIssueType(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Types</option>
+              {uniqueIssueTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Severity</label>
+            <select
+              value={filterSeverity}
+              onChange={(e) => setFilterSeverity(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Severities</option>
+              {uniqueSeverities.map(severity => (
+                <option key={severity} value={severity}>{severity}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {(filterExporter || filterIssueType || filterSeverity) && (
+          <div className="mt-3">
+            <button
+              onClick={() => {
+                setFilterExporter('');
+                setFilterIssueType('');
+                setFilterSeverity('');
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800 underline"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Issues Table */}
@@ -1688,7 +1802,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
       {totalPages > 1 && (
         <div className="flex justify-between items-center mt-4">
           <div className="text-sm text-gray-600">
-            Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, consistencyData.length)} of {consistencyData.length} issues
+            Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredIssues.length)} of {filteredIssues.length} issues
           </div>
           <div className="flex space-x-2">
             <button

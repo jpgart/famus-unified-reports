@@ -141,8 +141,8 @@ const InventoryReport = ({ onRefsUpdate }) => {
   // Calculate KPI values with fallbacks
   const kpiValues = {
     totalStock: stockAnalysis?.totalStock || 0,
-    totalLots: stockAnalysis?.totalLots || 0,
-    avgStockPerLot: stockAnalysis?.avgStockPerLot || 0,
+    totalLots: stockAnalysis?.totalLots || stockAnalysis?.totalLotids || 0,
+    avgStockPerLot: stockAnalysis?.avgStockPerLot || stockAnalysis?.avgPerLot || 0,
     activeExporters: exporterData.length || 0
   };
 
