@@ -141,7 +141,7 @@ const KPICards = ({ data }) => {
     <div className="my-10">
       {/* KPI Section */}
       <KPISection
-        title="📊 KPIs"
+        title="� KPIs"
         subtitle="Key Performance Indicators - Sales Analysis"
         titleColor="text-famus-orange"
         backgroundColor="bg-[#F9F6F4]"
@@ -2010,7 +2010,7 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
         
         {/* 1. KPIs */}
         <div ref={refs['KPIs']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">📈 KPIs</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">KPIs</h2>
           <p className="text-gray-600 mb-4 text-sm">Essential performance indicators providing a snapshot of overall business health and market position.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Key Performance Indicators showing overall sales metrics, quantities, and performance statistics across all exporters and retailers.</p>
           <KPICards data={salesData} />
@@ -2018,7 +2018,7 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
         
         {/* 3. Key Insights */}
         <div ref={refs['Key Insights']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">💡 Key Insights</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Key Insights</h2>
           <p className="text-gray-600 mb-4 text-sm">Strategic insights and market analysis derived from sales data patterns and business intelligence.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Automated market insights highlighting leadership positions, risk analysis, premium segments, and coverage patterns.</p>
           <KeyMarketInsights data={salesData} />
@@ -2026,14 +2026,14 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
         
         {/* 4. Top 5 Analysis */}
         <div ref={refs['Exporter-Retailer Analysis']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">🏆 Top 5 Analysis</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Top 5 Analysis</h2>
           <p className="text-gray-600 mb-6 text-sm">Ranking and performance analysis of the top 5 performers across different categories and metrics.</p>
           <ExporterRetailerAnalysis data={salesData} />
         </div>
         
         {/* 5. Exporter Comparator */}
         <div ref={refs['Exporter Comparator']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">⚖️ Exporter Comparator</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Exporter Comparator</h2>
           <p className="text-gray-600 mb-4 text-sm">Side-by-side comparison tool for analyzing performance differences between different exporters.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Side-by-side comparison of exporter performance metrics including sales volume, pricing, and market presence.</p>
           <ExporterComparator data={salesData} exporters={exporters} />
@@ -2041,7 +2041,7 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
         
         {/* 6. Sales by Variety */}
         <div ref={refs['Sales by Variety']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">🍇 Sales by Variety</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Sales by Variety</h2>
           <p className="text-gray-600 mb-4 text-sm">Breakdown of sales performance across different grape varieties, showing market preferences and seasonal trends.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Visual breakdown of sales performance across different grape varieties, showing market preferences and demand patterns.</p>
           <section className="bg-[#F9F6F4] rounded-2xl p-6 shadow-md">
@@ -2051,7 +2051,7 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
         
         {/* 7. Sales Timeline */}
         <div ref={refs['Sales Timeline']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">📅 Sales Timeline</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Sales Timeline</h2>
           <p className="text-gray-600 mb-4 text-sm">Chronological analysis of sales patterns showing temporal trends, seasonality, and growth trajectories over time.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Chronological view of sales activity over time, revealing seasonal patterns and market trends throughout the period.</p>
           <section className="bg-[#F9F6F4] rounded-2xl p-6 shadow-md">
@@ -2061,7 +2061,7 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
         
         {/* 8. Price History (Retailer Name) */}
         <div ref={refs['Price History Retailer']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">📊 Price History (Retailer)</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Price History (Retailer)</h2>
           <p className="text-gray-600 mb-4 text-sm">Historical pricing trends and analysis from the retailer perspective, tracking market price movements and variations.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Historical price evolution tracked by retailer, showing pricing strategies and market positioning over time.</p>
           <PriceHistory data={salesData} groupKey="Retailer Name" />
@@ -2069,7 +2069,7 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
         
         {/* 9. Price History (Exporter Clean) */}
         <div ref={refs['Price History Exporter']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">📈 Price History (Exporter)</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Price History (Exporter)</h2>
           <p className="text-gray-600 mb-4 text-sm">Historical pricing trends and analysis from the exporter perspective, showing supply-side price dynamics and market positioning.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Exporter-specific price trends analysis, displaying how different exporters adjust pricing in response to market conditions.</p>
           <PriceHistory data={salesData} groupKey="Exporter Clean" />
@@ -2077,7 +2077,7 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
         
         {/* 10. Heatmap: Retailer vs Variety (Avg Price) */}
         <div ref={refs['Heatmap Retailer vs Variety']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">🔥 Heatmap: Retailer / Variety</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Heatmap: Retailer / Variety</h2>
           <p className="text-gray-600 mb-4 text-sm">Visual correlation matrix showing the relationship intensity between different retailers and grape varieties.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Heat map visualization showing average pricing relationships between retailers and grape varieties, identifying premium and value segments.</p>
           <Heatmap data={salesData} rowKey="Retailer Name" colKey="Variety" valueKey="Price Four Star" agg="avg" title="Heatmap: Retailer vs Variety (Avg Price)" />
@@ -2085,7 +2085,7 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
         
         {/* 11. Heatmap: Exporter vs Retailer (Sales Amount) */}
         <div ref={refs['Heatmap Exporter vs Retailer']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">🗺️ Heatmap: Exporter / Retailer</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Heatmap: Exporter / Retailer</h2>
           <p className="text-gray-600 mb-4 text-sm">Visual correlation matrix displaying business relationship intensity and sales volume between exporters and retailers.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Sales volume heat map displaying business relationships between exporters and retailers, highlighting key partnerships and market concentrations.</p>
           <Heatmap data={salesData} rowKey="Exporter Clean" colKey="Retailer Name" valueKey="Sales Amount" agg="sum" title="Heatmap: Exporter vs Retailer (Sales Amount)" />
@@ -2093,7 +2093,7 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
         
         {/* 12. Top Retailers by Sales */}
         <div ref={refs['Ranking Retailers']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">🥇 Top Retailers by Sales</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Top Retailers by Sales</h2>
           <p className="text-gray-600 mb-4 text-sm">Ranking and detailed performance metrics of the highest-performing retailers based on sales volume and revenue.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Ranking of retailers by total sales volume, identifying the most significant customers and market leaders in the distribution network.</p>
           <RankingBar data={salesData} groupKey="Retailer Name" valueKey="Sales Amount" title="Top Retailers by Sales" />

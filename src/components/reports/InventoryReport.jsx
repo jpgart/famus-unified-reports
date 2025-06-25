@@ -159,14 +159,13 @@ const InventoryReport = ({ onRefsUpdate }) => {
 
       {/* Main Content */}
       <div ref={sectionRefs['Initial Stock']} className="bg-[#F9F6F4] rounded-2xl p-6 shadow-md">
-        <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2 flex items-center">
-          <span className="mr-3">📊</span>
+        <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">
           Initial Stock Analysis
         </h2>
 
         {/* Stock Summary KPI Cards */}
         <KPISection
-          title="📊 KPIs"
+          title="� KPIs"
           subtitle="Key Performance Indicators - Inventory Analysis"
           titleColor="text-[#3D5A80]"
           backgroundColor="bg-white"

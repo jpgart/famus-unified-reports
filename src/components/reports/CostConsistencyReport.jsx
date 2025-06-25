@@ -3146,7 +3146,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
         
         {/* 1. KPIs */}
         <div ref={refs['KPIs']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">📊 KPIs</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">KPIs</h2>
           <p className="text-gray-600 mb-4 text-sm">Essential performance indicators providing a snapshot of overall cost efficiency and operational health.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Key Performance Indicators showing overall cost metrics, consistency scores, and efficiency statistics across all exporters and lot records.</p>
           <KPICards metrics={metrics} />
@@ -3154,7 +3154,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
         
         {/* 3. Key Insights */}
         <div ref={refs['Key Insights']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">💡 Key Insights</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Key Insights</h2>
           <p className="text-gray-600 mb-4 text-sm">Strategic insights and cost analysis derived from operational data patterns and business intelligence.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Automated cost insights highlighting efficiency leaders, variability analysis, optimization opportunities, and competitive positioning.</p>
           <KeyCostInsights insights={insights} />
@@ -3162,7 +3162,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
         
         {/* 4. Exporter Cost Comparator */}
         <div ref={refs['Exporter Comparator']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">⚖️ Exporter Cost Comparator</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Exporter Cost Comparator</h2>
           <p className="text-gray-600 mb-4 text-sm">Interactive comparison tool to analyze cost efficiency differences between exporters, focusing on average cost per box and operational consistency.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Comprehensive analysis comparing cost efficiency, consistency, and performance metrics across different exporters.</p>
           <ExporterCostComparator metrics={metrics} />
@@ -3170,7 +3170,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
         
         {/* 5. Outlier Analysis */}
         <div ref={refs['Outlier Analysis']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">⚠️ Outlier Analysis</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Outlier Analysis</h2>
           <p className="text-gray-600 mb-4 text-sm">Statistical detection and analysis of cost outliers, identifying unusual patterns that may indicate errors or exceptional operational conditions.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Advanced statistical analysis to identify cost anomalies and outliers that require attention or investigation.</p>
           <OutlierAnalysis metrics={metrics} />
@@ -3178,7 +3178,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
         
         {/* 6. Ocean Freight Analysis */}
         <div ref={refs['Ocean Freight']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">🚢 Ocean Freight Analysis</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Ocean Freight Analysis</h2>
           <p className="text-gray-600 mb-4 text-sm">Ocean freight cost analysis showing shipping efficiency and cost optimization opportunities across exporters.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Comprehensive analysis of shipping costs, freight efficiency, and logistics optimization opportunities.</p>
           <OceanFreightAnalysis />
@@ -3186,7 +3186,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
 
         {/* 7. Repacking Analysis */}
         <div ref={refs['Repacking']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">📦 Repacking Analysis</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Repacking Analysis</h2>
           <p className="text-gray-600 mb-4 text-sm">Combined analysis of packing materials and repacking charges, identifying cost efficiency in packaging operations.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Detailed examination of packaging costs, material efficiency, and repacking optimization opportunities.</p>
           <RepackingAnalysis />
@@ -3194,7 +3194,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
 
         {/* 8. Internal Consistency Analysis */}
         <div ref={refs['Internal Consistency']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">🔍 Internal Consistency Analysis</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Internal Consistency Analysis</h2>
           <p className="text-gray-600 mb-4 text-sm">Analysis of data consistency within individual records, identifying discrepancies and validation issues in internal calculations.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Internal data validation and consistency checks to ensure accurate cost calculations and reporting.</p>
           <InternalConsistencyAnalysis 
@@ -3205,7 +3205,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
 
         {/* 9. External Consistency Analysis */}
         <div ref={refs['External Consistency']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">⚖️ External Consistency Analysis</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">External Consistency Analysis</h2>
           <p className="text-gray-600 mb-4 text-sm">Cross-validation analysis comparing data patterns across different sources and entities to ensure external data integrity.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Cross-system validation and external data consistency checks to ensure alignment across different data sources.</p>
           <ExternalConsistencyAnalysis 
@@ -3216,7 +3216,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
 
         {/* 10. Final Cost Analysis Tables */}
         <div ref={refs['Final Tables']}>
-          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">📊 Final Cost Analysis Tables</h2>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Final Cost Analysis Tables</h2>
           <p className="text-gray-600 mb-4 text-sm">Comprehensive cost breakdown tables by category and exporter, showing both total amounts and per-box averages for complete financial analysis.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Final comprehensive tables providing detailed cost breakdowns and summary statistics for complete financial analysis.</p>
           <FinalCostAnalysisTables 
