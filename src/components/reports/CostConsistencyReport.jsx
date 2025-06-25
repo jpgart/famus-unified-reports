@@ -699,30 +699,65 @@ const OceanFreightAnalysis = () => {
         Ocean Freight Cost Analysis & Inconsistency Detection
       </h4>
       
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-[#F9F6F4] p-3 rounded-lg">
-          <div className="text-sm text-gray-600">Total Amount</div>
-          <div className="text-lg font-bold text-[#3D5A80]">{formatPrice(freightData.summary?.totalAmount || 0)}</div>
-        </div>
-        <div className="bg-[#F9F6F4] p-3 rounded-lg">
-          <div className="text-sm text-gray-600">Avg per Box</div>
-          <div className="text-lg font-bold text-[#3D5A80]">{formatPrice(freightData.summary?.avgPerBox || 0)}</div>
-        </div>
-        <div className="bg-[#F9F6F4] p-3 rounded-lg">
-          <div className="text-sm text-gray-600">Exporters</div>
-          <div className="text-lg font-bold text-[#3D5A80]">{freightData.byExporter.length}</div>
-        </div>
-        <div className="bg-[#F9F6F4] p-3 rounded-lg">
-          <div className="text-sm text-gray-600">Inconsistencies</div>
-          <div className="text-lg font-bold text-[#EE6C4D]">{inconsistencies.length}</div>
-        </div>
-      </div>
+      {/* KPI Section */}
+      <KPISection
+        title="🚢 Ocean Freight KPIs"
+        subtitle="Key metrics for ocean freight cost analysis"
+        titleColor="text-[#3D5A80]"
+        backgroundColor="bg-white"
+        kpis={[
+          { 
+            label: 'Total Amount', 
+            value: freightData.summary?.totalAmount || 0, 
+            type: 'currency',
+            size: 'normal'
+          },
+          { 
+            label: 'Avg per Box', 
+            value: freightData.summary?.avgPerBox || 0, 
+            type: 'currency',
+            size: 'normal'
+          },
+          { 
+            label: 'Exporters', 
+            value: Object.keys(freightData.byExporter || {}).length, 
+            type: 'integer',
+            size: 'normal'
+          },
+          { 
+            label: 'Inconsistencies', 
+            value: inconsistencies.length, 
+            type: 'integer',
+            size: 'normal'
+          }
+        ]}
+        chart={null}
+        showChart={false}
+        containerClass=""
+      />
 
       {/* Chart */}
       <div className="bg-gray-50 rounded-lg p-4 mb-6">
         <div className="relative h-[300px]">
-          <Bar data={chartData} options={getDefaultChartOptions('Ocean Freight Cost by Exporter')} />
+          <Bar data={chartData} options={{
+            ...getDefaultChartOptions('Ocean Freight Cost by Exporter'),
+            plugins: {
+              ...getDefaultChartOptions().plugins,
+              zoom: {
+                zoom: {
+                  wheel: {
+                    enabled: false
+                  },
+                  pinch: {
+                    enabled: false
+                  }
+                },
+                pan: {
+                  enabled: false
+                }
+              }
+            }
+          }} />
         </div>
       </div>
 
@@ -890,25 +925,42 @@ const RepackingAnalysis = () => {
         {displayName} Analysis
       </h4>
       
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-[#F9F6F4] p-3 rounded-lg">
-          <div className="text-sm text-gray-600">Total Amount</div>
-          <div className="text-lg font-bold text-[#3D5A80]">{formatPrice(analysisData.summary?.totalAmount || 0)}</div>
-        </div>
-        <div className="bg-[#F9F6F4] p-3 rounded-lg">
-          <div className="text-sm text-gray-600">Avg per Box</div>
-          <div className="text-lg font-bold text-[#3D5A80]">{formatPrice(analysisData.summary?.avgPerBox || 0)}</div>
-        </div>
-        <div className="bg-[#F9F6F4] p-3 rounded-lg">
-          <div className="text-sm text-gray-600">Total Lots</div>
-          <div className="text-lg font-bold text-[#3D5A80]">{formatNumber(analysisData.summary?.lotsWithCharge || 0)}</div>
-        </div>
-        <div className="bg-[#F9F6F4] p-3 rounded-lg">
-          <div className="text-sm text-gray-600">Exporters</div>
-          <div className="text-lg font-bold text-[#3D5A80]">{formatNumber(Object.keys(analysisData.byExporter || {}).length || 0)}</div>
-        </div>
-      </div>
+      {/* KPI Section */}
+      <KPISection
+        title="📦 Repacking KPIs"
+        subtitle="Key metrics for repacking and packing materials analysis"
+        titleColor="text-[#3D5A80]"
+        backgroundColor="bg-white"
+        kpis={[
+          { 
+            label: 'Total Amount', 
+            value: analysisData.summary?.totalAmount || 0, 
+            type: 'currency',
+            size: 'normal'
+          },
+          { 
+            label: 'Packing Materials', 
+            value: analysisData.analysis?.['PACKING MATERIALS']?.totalAmount || 0, 
+            type: 'currency',
+            size: 'normal'
+          },
+          { 
+            label: 'Repacking Charges', 
+            value: analysisData.analysis?.['REPACKING']?.totalAmount || 0, 
+            type: 'currency',
+            size: 'normal'
+          },
+          { 
+            label: 'Total Lots', 
+            value: analysisData.summary?.lotsWithCharge || 0, 
+            type: 'integer',
+            size: 'normal'
+          }
+        ]}
+        chart={null}
+        showChart={false}
+        containerClass=""
+      />
 
       {/* Breakdown by Charge Type */}
       {analysisData.analysis && (
@@ -941,7 +993,25 @@ const RepackingAnalysis = () => {
 
       {/* Chart */}
       <div className="relative h-[300px] mb-4">
-        <Bar data={chartData} options={getDefaultChartOptions(`${displayName} by Exporter`)} />
+        <Bar data={chartData} options={{
+          ...getDefaultChartOptions(`${displayName} by Exporter`),
+          plugins: {
+            ...getDefaultChartOptions().plugins,
+            zoom: {
+              zoom: {
+                wheel: {
+                  enabled: false
+                },
+                pinch: {
+                  enabled: false
+                }
+              },
+              pan: {
+                enabled: false
+              }
+            }
+          }
+        }} />
       </div>
 
       {/* Table */}

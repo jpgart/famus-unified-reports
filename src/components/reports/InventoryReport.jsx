@@ -138,6 +138,14 @@ const InventoryReport = ({ onRefsUpdate }) => {
       .sort(([,a], [,b]) => b.totalStock - a.totalStock) 
     : [];
 
+  // Calculate KPI values with fallbacks
+  const kpiValues = {
+    totalStock: stockAnalysis?.totalStock || 0,
+    totalLots: stockAnalysis?.totalLots || 0,
+    avgStockPerLot: stockAnalysis?.avgStockPerLot || 0,
+    activeExporters: exporterData.length || 0
+  };
+
   return (
     <div className="min-h-screen bg-[#F9F6F4] w-full m-0 p-0">
       <div className="space-y-8 p-6">
@@ -165,26 +173,26 @@ const InventoryReport = ({ onRefsUpdate }) => {
           kpis={[
             { 
               label: 'Total Stock', 
-              value: stockAnalysis.totalStock, 
+              value: kpiValues.totalStock, 
               type: 'integer',
               size: 'normal'
             },
             { 
               label: 'Total Lots', 
-              value: stockAnalysis.totalLots, 
+              value: kpiValues.totalLots, 
               type: 'integer',
               size: 'normal'
             },
             { 
               label: 'Avg Stock per Lot', 
-              value: stockAnalysis.avgStockPerLot, 
+              value: kpiValues.avgStockPerLot, 
               type: 'decimal',
               decimals: 1,
               size: 'normal'
             },
             { 
               label: 'Active Exporters', 
-              value: exporterData.length, 
+              value: kpiValues.activeExporters, 
               type: 'integer',
               size: 'normal'
             }
