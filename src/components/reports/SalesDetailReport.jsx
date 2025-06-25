@@ -1228,11 +1228,13 @@ const ExporterComparator = ({ data, exporters }) => {
         position: 'top',
         labels: {
           usePointStyle: true,
-          padding: 20,
+          padding: 15,
           font: {
-            size: 14,
+            size: window.innerWidth < 640 ? 10 : window.innerWidth < 1024 ? 12 : 14,
             weight: 'bold'
-          }
+          },
+          boxWidth: window.innerWidth < 640 ? 10 : 12,
+          boxHeight: window.innerWidth < 640 ? 10 : 12
         }
       },
       tooltip: {
@@ -1243,6 +1245,12 @@ const ExporterComparator = ({ data, exporters }) => {
         borderWidth: 2,
         cornerRadius: 8,
         displayColors: true,
+        titleFont: {
+          size: window.innerWidth < 640 ? 12 : 14
+        },
+        bodyFont: {
+          size: window.innerWidth < 640 ? 11 : 13
+        },
         callbacks: {
           title: function(context) {
             return `Retailer: ${context[0].label}`;
@@ -1265,12 +1273,22 @@ const ExporterComparator = ({ data, exporters }) => {
       y: {
         type: 'linear',
         position: 'left',
-        title: { display: true, text: 'Sale Quantity', font: { size: 14, weight: 'bold' } },
+        title: { 
+          display: true, 
+          text: 'Sale Quantity', 
+          font: { 
+            size: window.innerWidth < 640 ? 10 : window.innerWidth < 1024 ? 12 : 14, 
+            weight: 'bold' 
+          } 
+        },
         beginAtZero: true,
         grid: {
           color: 'rgba(0,0,0,0.1)',
         },
         ticks: {
+          font: {
+            size: window.innerWidth < 640 ? 9 : window.innerWidth < 1024 ? 10 : 11
+          },
           callback: function(value) {
             return value?.toLocaleString();
           }
@@ -1279,10 +1297,20 @@ const ExporterComparator = ({ data, exporters }) => {
       y1: {
         type: 'linear',
         position: 'right',
-        title: { display: true, text: 'Avg Price ($)', font: { size: 14, weight: 'bold' } },
+        title: { 
+          display: true, 
+          text: 'Avg Price ($)', 
+          font: { 
+            size: window.innerWidth < 640 ? 10 : window.innerWidth < 1024 ? 12 : 14, 
+            weight: 'bold' 
+          } 
+        },
         grid: { drawOnChartArea: false },
         beginAtZero: true,
         ticks: {
+          font: {
+            size: window.innerWidth < 640 ? 9 : window.innerWidth < 1024 ? 10 : 11
+          },
           callback: function(value) {
             return '$' + value?.toFixed(1);
           }
@@ -1290,45 +1318,48 @@ const ExporterComparator = ({ data, exporters }) => {
       },
       x: {
         ticks: {
-          maxRotation: 45,
-          minRotation: 45
+          maxRotation: window.innerWidth < 640 ? 60 : window.innerWidth < 1024 ? 45 : 45,
+          minRotation: window.innerWidth < 640 ? 45 : window.innerWidth < 1024 ? 30 : 45,
+          font: {
+            size: window.innerWidth < 640 ? 8 : window.innerWidth < 1024 ? 9 : 10
+          }
         }
       }
     }
   };
 
   return (
-    <div className="my-8 bg-gradient-to-br from-[#F9F6F4] to-[#E0FBFC] rounded-3xl p-6 lg:p-8 shadow-2xl border border-[#98C1D9]">
-      <div className="text-center mb-8">
-        <h3 className="text-3xl lg:text-4xl font-bold mb-4 text-[#3D5A80] bg-gradient-to-r from-[#3D5A80] to-[#98C1D9] bg-clip-text text-transparent">
+    <div className="my-6 lg:my-8 bg-gradient-to-br from-[#F9F6F4] to-[#E0FBFC] rounded-2xl lg:rounded-3xl p-4 lg:p-8 shadow-2xl border border-[#98C1D9]">
+      <div className="text-center mb-6 lg:mb-8">
+        <h3 className="text-2xl lg:text-4xl font-bold mb-3 lg:mb-4 text-[#3D5A80] bg-gradient-to-r from-[#3D5A80] to-[#98C1D9] bg-clip-text text-transparent">
           ⚖️ Exporter Performance Arena
         </h3>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className="text-sm lg:text-lg text-gray-600 max-w-2xl mx-auto">
           Head-to-head comparison of exporter performance across key metrics and retailer relationships
         </p>
       </div>
 
       {/* Exporter Selection with Enhanced UI */}
-      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-3 lg:gap-4 mb-6 lg:mb-8">
         <div className="flex flex-col items-center">
-          <label className="text-sm font-semibold text-[#3D5A80] mb-2">Champion 1</label>
+          <label className="text-xs lg:text-sm font-semibold text-[#3D5A80] mb-2">Champion 1</label>
           <select 
             value={exp1} 
             onChange={handleExporterChange(setExp1)}
-            className="border-2 border-[#98C1D9] p-3 rounded-xl text-lg bg-white shadow-lg focus:ring-4 focus:ring-[#98C1D9] focus:border-[#3D5A80] transition-all duration-300 hover:shadow-xl"
+            className="border-2 border-[#98C1D9] p-2 lg:p-3 rounded-lg lg:rounded-xl text-sm lg:text-lg bg-white shadow-lg focus:ring-4 focus:ring-[#98C1D9] focus:border-[#3D5A80] transition-all duration-300 hover:shadow-xl min-w-[150px] lg:min-w-[200px]"
           >
             {exporters.map(e => <option key={e} value={e}>{e}</option>)}
           </select>
         </div>
         
-        <div className="text-4xl text-[#EE6C4D] animate-pulse">🥊</div>
+        <div className="text-2xl lg:text-4xl text-[#EE6C4D] animate-pulse">🥊</div>
         
         <div className="flex flex-col items-center">
-          <label className="text-sm font-semibold text-[#EE6C4D] mb-2">Champion 2</label>
+          <label className="text-xs lg:text-sm font-semibold text-[#EE6C4D] mb-2">Champion 2</label>
           <select 
             value={exp2} 
             onChange={handleExporterChange(setExp2)}
-            className="border-2 border-[#EE6C4D] p-3 rounded-xl text-lg bg-white shadow-lg focus:ring-4 focus:ring-[#EE6C4D] focus:border-[#3D5A80] transition-all duration-300 hover:shadow-xl"
+            className="border-2 border-[#EE6C4D] p-2 lg:p-3 rounded-lg lg:rounded-xl text-sm lg:text-lg bg-white shadow-lg focus:ring-4 focus:ring-[#EE6C4D] focus:border-[#3D5A80] transition-all duration-300 hover:shadow-xl min-w-[150px] lg:min-w-[200px]"
           >
             {exporters.map(e => <option key={e} value={e}>{e}</option>)}
           </select>
@@ -1336,61 +1367,61 @@ const ExporterComparator = ({ data, exporters }) => {
       </div>
 
       {/* Stats Comparison Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
         {/* Exporter 1 Stats */}
-        <div className="bg-gradient-to-br from-[#98C1D9] to-[#3D5A80] text-white rounded-2xl p-6 shadow-xl transform hover:scale-105 transition-all duration-300">
-          <h4 className="text-2xl font-bold mb-4 text-center">{exp1}</h4>
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div className="bg-white/20 rounded-lg p-3">
-              <div className="text-2xl font-bold">${stats1.totalSales.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
-              <div className="text-sm opacity-90">Total Sales</div>
+        <div className="bg-gradient-to-br from-[#98C1D9] to-[#3D5A80] text-white rounded-xl lg:rounded-2xl p-4 lg:p-6 shadow-xl transform hover:scale-105 transition-all duration-300">
+          <h4 className="text-lg lg:text-2xl font-bold mb-3 lg:mb-4 text-center">{exp1}</h4>
+          <div className="grid grid-cols-2 gap-2 lg:gap-4 text-center">
+            <div className="bg-white/20 rounded-lg p-2 lg:p-3">
+              <div className="text-lg lg:text-2xl font-bold">${stats1.totalSales.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+              <div className="text-xs lg:text-sm opacity-90">Total Sales</div>
             </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <div className="text-2xl font-bold">{stats1.totalQuantity.toLocaleString()}</div>
-              <div className="text-sm opacity-90">Total Quantity</div>
+            <div className="bg-white/20 rounded-lg p-2 lg:p-3">
+              <div className="text-lg lg:text-2xl font-bold">{stats1.totalQuantity.toLocaleString()}</div>
+              <div className="text-xs lg:text-sm opacity-90">Total Quantity</div>
             </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <div className="text-2xl font-bold">${stats1.avgPrice.toFixed(1)}</div>
-              <div className="text-sm opacity-90">Avg Price</div>
+            <div className="bg-white/20 rounded-lg p-2 lg:p-3">
+              <div className="text-lg lg:text-2xl font-bold">${stats1.avgPrice.toFixed(1)}</div>
+              <div className="text-xs lg:text-sm opacity-90">Avg Price</div>
             </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <div className="text-2xl font-bold">{stats1.uniqueRetailers}</div>
-              <div className="text-sm opacity-90">Retailers</div>
+            <div className="bg-white/20 rounded-lg p-2 lg:p-3">
+              <div className="text-lg lg:text-2xl font-bold">{stats1.uniqueRetailers}</div>
+              <div className="text-xs lg:text-sm opacity-90">Retailers</div>
             </div>
           </div>
         </div>
 
         {/* Exporter 2 Stats */}
-        <div className="bg-gradient-to-br from-[#EE6C4D] to-[#B91C1C] text-white rounded-2xl p-6 shadow-xl transform hover:scale-105 transition-all duration-300">
-          <h4 className="text-2xl font-bold mb-4 text-center">{exp2}</h4>
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div className="bg-white/20 rounded-lg p-3">
-              <div className="text-2xl font-bold">${stats2.totalSales.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
-              <div className="text-sm opacity-90">Total Sales</div>
+        <div className="bg-gradient-to-br from-[#EE6C4D] to-[#B91C1C] text-white rounded-xl lg:rounded-2xl p-4 lg:p-6 shadow-xl transform hover:scale-105 transition-all duration-300">
+          <h4 className="text-lg lg:text-2xl font-bold mb-3 lg:mb-4 text-center">{exp2}</h4>
+          <div className="grid grid-cols-2 gap-2 lg:gap-4 text-center">
+            <div className="bg-white/20 rounded-lg p-2 lg:p-3">
+              <div className="text-lg lg:text-2xl font-bold">${stats2.totalSales.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+              <div className="text-xs lg:text-sm opacity-90">Total Sales</div>
             </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <div className="text-2xl font-bold">{stats2.totalQuantity.toLocaleString()}</div>
-              <div className="text-sm opacity-90">Total Quantity</div>
+            <div className="bg-white/20 rounded-lg p-2 lg:p-3">
+              <div className="text-lg lg:text-2xl font-bold">{stats2.totalQuantity.toLocaleString()}</div>
+              <div className="text-xs lg:text-sm opacity-90">Total Quantity</div>
             </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <div className="text-2xl font-bold">${stats2.avgPrice.toFixed(1)}</div>
-              <div className="text-sm opacity-90">Avg Price</div>
+            <div className="bg-white/20 rounded-lg p-2 lg:p-3">
+              <div className="text-lg lg:text-2xl font-bold">${stats2.avgPrice.toFixed(1)}</div>
+              <div className="text-xs lg:text-sm opacity-90">Avg Price</div>
             </div>
-            <div className="bg-white/20 rounded-lg p-3">
-              <div className="text-2xl font-bold">{stats2.uniqueRetailers}</div>
-              <div className="text-sm opacity-90">Retailers</div>
+            <div className="bg-white/20 rounded-lg p-2 lg:p-3">
+              <div className="text-lg lg:text-2xl font-bold">{stats2.uniqueRetailers}</div>
+              <div className="text-xs lg:text-sm opacity-90">Retailers</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Enhanced Chart */}
-      <div className={`bg-white rounded-2xl shadow-2xl p-4 lg:p-6 border border-gray-200 transition-all duration-500 ${isAnimating ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}`}>
-        <div className="text-center mb-4">
-          <h4 className="text-xl lg:text-2xl font-bold text-[#3D5A80]">Performance by Retailer</h4>
-          <p className="text-gray-600 text-sm">Sales quantity (bars) and average prices (lines) comparison</p>
+      <div className={`bg-white rounded-xl lg:rounded-2xl shadow-2xl p-3 lg:p-6 border border-gray-200 transition-all duration-500 ${isAnimating ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}`}>
+        <div className="text-center mb-3 lg:mb-4">
+          <h4 className="text-lg lg:text-2xl font-bold text-[#3D5A80]">Performance by Retailer</h4>
+          <p className="text-gray-600 text-xs lg:text-sm">Sales quantity (bars) and average prices (lines) comparison</p>
         </div>
-        <div className="h-[400px] sm:h-[500px] lg:h-[600px] xl:h-[700px]">
+        <div className="h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px]">
           <Bar 
             data={{
               labels,
@@ -1401,10 +1432,10 @@ const ExporterComparator = ({ data, exporters }) => {
                   data: barData1, 
                   backgroundColor: 'rgba(152,193,217,0.8)', 
                   borderColor: 'rgba(152,193,217,1)',
-                  borderWidth: 2,
+                  borderWidth: window.innerWidth < 640 ? 1 : 2,
                   yAxisID: 'y',
                   hoverBackgroundColor: 'rgba(152,193,217,1)',
-                  hoverBorderWidth: 3
+                  hoverBorderWidth: window.innerWidth < 640 ? 2 : 3
                 },
                 { 
                   type: 'bar', 
@@ -1412,10 +1443,10 @@ const ExporterComparator = ({ data, exporters }) => {
                   data: barData2, 
                   backgroundColor: 'rgba(238,108,77,0.8)', 
                   borderColor: 'rgba(238,108,77,1)',
-                  borderWidth: 2,
+                  borderWidth: window.innerWidth < 640 ? 1 : 2,
                   yAxisID: 'y',
                   hoverBackgroundColor: 'rgba(238,108,77,1)',
-                  hoverBorderWidth: 3
+                  hoverBorderWidth: window.innerWidth < 640 ? 2 : 3
                 },
                 { 
                   type: 'line', 
@@ -1423,15 +1454,15 @@ const ExporterComparator = ({ data, exporters }) => {
                   data: lineData1, 
                   borderColor: 'rgba(61,90,128,1)', 
                   backgroundColor: 'rgba(61,90,128,0.1)',
-                  borderWidth: 4, 
+                  borderWidth: window.innerWidth < 640 ? 2 : 4, 
                   fill: false, 
                   tension: 0.4, 
                   yAxisID: 'y1',
-                  pointRadius: 6,
-                  pointHoverRadius: 8,
+                  pointRadius: window.innerWidth < 640 ? 3 : 6,
+                  pointHoverRadius: window.innerWidth < 640 ? 5 : 8,
                   pointBackgroundColor: 'rgba(61,90,128,1)',
                   pointBorderColor: '#fff',
-                  pointBorderWidth: 2
+                  pointBorderWidth: window.innerWidth < 640 ? 1 : 2
                 },
                 { 
                   type: 'line', 
@@ -1439,15 +1470,15 @@ const ExporterComparator = ({ data, exporters }) => {
                   data: lineData2, 
                   borderColor: 'rgba(185,28,28,1)', 
                   backgroundColor: 'rgba(185,28,28,0.1)',
-                  borderWidth: 4, 
+                  borderWidth: window.innerWidth < 640 ? 2 : 4, 
                   fill: false, 
                   tension: 0.4, 
                   yAxisID: 'y1',
-                  pointRadius: 6,
-                  pointHoverRadius: 8,
+                  pointRadius: window.innerWidth < 640 ? 3 : 6,
+                  pointHoverRadius: window.innerWidth < 640 ? 5 : 8,
                   pointBackgroundColor: 'rgba(185,28,28,1)',
                   pointBorderColor: '#fff',
-                  pointBorderWidth: 2
+                  pointBorderWidth: window.innerWidth < 640 ? 1 : 2
                 },
               ]
             }} 
@@ -1456,8 +1487,8 @@ const ExporterComparator = ({ data, exporters }) => {
         </div>
         
         {/* Chart Legend */}
-        <div className="mt-6 text-center text-gray-600 text-sm bg-gray-50 p-4 rounded-lg">
-          <p className="font-semibold mb-2">Performance Comparison Analysis</p>
+        <div className="mt-4 lg:mt-6 text-center text-gray-600 text-xs lg:text-sm bg-gray-50 p-3 lg:p-4 rounded-lg">
+          <p className="font-semibold mb-1 lg:mb-2">Performance Comparison Analysis</p>
           <p>This interactive chart compares sales volume (bars) and average pricing (lines) between two selected exporters across their shared retailer network. Hover over data points for detailed insights and use touch/pinch gestures on mobile devices for better exploration.</p>
         </div>
       </div>
