@@ -10,6 +10,22 @@ import { getDefaultChartOptions, FAMUS_COLORS, registerChartPlugins } from '../.
 import { KPISection } from '../common';
 import { filterExportersList } from '../../utils/dataFiltering';
 
+// Custom hook to detect mobile screen size
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  return isMobile;
+};
+
 // Combined chart with dual Y-axis
 const getChartData = (data, xKey, barKey, lineKey) => {
   const labels = getUnique(data, xKey);
@@ -555,11 +571,33 @@ const getPieData = (data, labelKey, valueKey) => {
 // Updated to ensure $XX.X format for all price tooltips
 // Fixed Total Sales to use proper thousands separator format
 // Final review completed - all formatting standardized
-const chartOptions = {
+// Mobile-optimized chart configuration
+const isMobile = () => window.innerWidth < 768;
+
+// Create dynamic chart options based on screen size
+const getDynamicChartOptions = (isMobileView) => ({
   responsive: true,
-  interaction: { mode: 'index', intersect: false },
+  maintainAspectRatio: false, // Allow custom height
+  interaction: { 
+    mode: 'index', 
+    intersect: false,
+    // Enhanced touch interaction for mobile
+    axis: 'x'
+  },
   plugins: { 
-    legend: { position: 'top' },
+    legend: { 
+      position: isMobileView ? 'bottom' : 'top', // Legend at bottom for mobile
+      labels: {
+        usePointStyle: true,
+        padding: isMobileView ? 8 : 20,
+        font: {
+          size: isMobileView ? 10 : 12
+        },
+        // Wrap long labels on mobile
+        maxWidth: isMobileView ? 100 : 200,
+        boxWidth: isMobileView ? 8 : 12
+      }
+    },
     tooltip: {
       backgroundColor: '#3D5A80',
       titleColor: '#F9F6F4',
@@ -568,6 +606,11 @@ const chartOptions = {
       borderWidth: 1,
       cornerRadius: 6,
       displayColors: true,
+      titleFont: { size: isMobileView ? 11 : 14 },
+      bodyFont: { size: isMobileView ? 10 : 13 },
+      // Improve mobile tooltip positioning
+      position: 'nearest',
+      caretPadding: isMobileView ? 8 : 10,
       callbacks: {
         label: function(context) {
           const label = context.dataset.label || '';
@@ -603,26 +646,62 @@ const chartOptions = {
     }
   },
   scales: {
+    x: {
+      grid: {
+        color: 'rgba(61, 90, 128, 0.1)',
+        display: !isMobileView // Hide grid on mobile for cleaner look
+      },
+      ticks: {
+        color: '#3D5A80',
+        font: {
+          size: isMobileView ? 9 : 11
+        },
+        maxRotation: isMobileView ? 45 : 0, // Rotate labels on mobile
+        minRotation: isMobileView ? 45 : 0
+      }
+    },
     y: {
       type: 'linear',
       position: 'left',
-      title: { display: true, text: 'Sale Quantity' },
+      title: { 
+        display: !isMobileView, // Hide axis titles on mobile to save space
+        text: 'Sale Quantity',
+        font: { size: isMobileView ? 9 : 12 }
+      },
+      grid: {
+        color: 'rgba(61, 90, 128, 0.1)',
+        display: !isMobileView
+      },
+      ticks: {
+        color: '#3D5A80',
+        font: {
+          size: isMobileView ? 9 : 11
+        }
+      },
       beginAtZero: true,
     },
     y1: {
       type: 'linear',
       position: 'right',
-      title: { display: true, text: 'Avg Price ($)' },
+      title: { 
+        display: !isMobileView, 
+        text: 'Avg Price ($)',
+        font: { size: isMobileView ? 9 : 12 }
+      },
       grid: { drawOnChartArea: false },
-      beginAtZero: true,
       ticks: {
+        color: '#3D5A80',
+        font: {
+          size: isMobileView ? 9 : 11
+        },
         callback: function(value) {
           return '$' + value.toFixed(1);
         }
       },
+      beginAtZero: true,
     },
   },
-};
+});
 
 // Chart by variety
 const getVarietyChartData = (data) => {
@@ -1167,6 +1246,7 @@ const ExporterComparator = ({ data, exporters }) => {
   const [exp1, setExp1] = useState(exporters[0] || '');
   const [exp2, setExp2] = useState(exporters[1] || '');
   const [isAnimating, setIsAnimating] = useState(false);
+  const isMobileView = useIsMobile();
   
   const handleExporterChange = (setter) => (e) => {
     setIsAnimating(true);
@@ -1210,45 +1290,29 @@ const ExporterComparator = ({ data, exporters }) => {
     uniqueVarieties: getUnique(data2, 'Variety').length
   };
 
-  const enhancedChartOptions = {
-    ...chartOptions,
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'index',
-      intersect: false,
-    },
-    animation: {
-      duration: 1000,
-      easing: 'easeInOutQuart',
-    },
-    plugins: {
-      ...chartOptions.plugins,
-      legend: {
-        position: 'top',
-        labels: {
-          usePointStyle: true,
-          padding: 15,
-          font: {
-            size: window.innerWidth < 640 ? 10 : window.innerWidth < 1024 ? 12 : 14,
-            weight: 'bold'
-          },
-          boxWidth: window.innerWidth < 640 ? 10 : 12,
-          boxHeight: window.innerWidth < 640 ? 10 : 12
-        }
+  const enhancedChartOptions = useMemo(() => {
+    const baseOptions = getDynamicChartOptions(isMobileView);
+    return {
+      ...baseOptions,
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart',
       },
-      tooltip: {
-        backgroundColor: 'rgba(0,0,0,0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: '#EE6C4D',
-        borderWidth: 2,
-        cornerRadius: 8,
-        displayColors: true,
-        titleFont: {
-          size: window.innerWidth < 640 ? 12 : 14
-        },
-        bodyFont: {
+      plugins: {
+        ...baseOptions.plugins,
+        legend: {
+          ...baseOptions.plugins.legend,
+          labels: {
+            ...baseOptions.plugins.legend.labels,
+            font: {
+              size: isMobileView ? 10 : 14,
+              weight: 'bold'
+            }
+          }
+        }
+      }
+    };
+  }, [isMobileView]);
           size: window.innerWidth < 640 ? 11 : 13
         },
         callbacks: {
@@ -1515,50 +1579,65 @@ const PriceHistory = ({ data, groupKey }) => {
   const groups = getUnique(data, groupKey);
   const [selected, setSelected] = useState(groups[0] || '');
   const filtered = data.filter(d => d[groupKey] === selected);
+  const isMobileView = useIsMobile();
   
-  // Specific chart options for Price History with enhanced price formatting
-  const priceHistoryOptions = {
-    ...chartOptions,
-    plugins: {
-      ...chartOptions.plugins,
-      tooltip: {
-        ...chartOptions.plugins.tooltip,
-        callbacks: {
-          label: function(context) {
-            const label = context.dataset.label || '';
-            let value = context.parsed.y;
-            
-            // For Price History, handle different types of values
-            if (label.toLowerCase().includes('sales amount') ||
-                label.toLowerCase().includes('total sales') ||
-                label.toLowerCase().includes('revenue')) {
-              return `${label}: $${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-            } else if (label.toLowerCase().includes('price') || 
-                label.toLowerCase().includes('avg') ||
-                label.toLowerCase().includes('four star') ||
-                label === 'Avg Price') {
-              return `${label}: $${value.toFixed(1)}`;
-            } else if (label.toLowerCase().includes('quantity') || 
-                       label.toLowerCase().includes('sale quantity')) {
-              return `${label}: ${value.toLocaleString()}`;
-            } else {
-              // Default: if value looks like price data, format as currency
-              if (value > 0.1 && value < 1000) {
+  // Mobile-optimized chart options for Price History
+  const priceHistoryOptions = useMemo(() => {
+    const baseOptions = getDynamicChartOptions(isMobileView);
+    return {
+      ...baseOptions,
+      plugins: {
+        ...baseOptions.plugins,
+        tooltip: {
+          ...baseOptions.plugins.tooltip,
+          callbacks: {
+            label: function(context) {
+              const label = context.dataset.label || '';
+              let value = context.parsed.y;
+              
+              // For Price History, handle different types of values
+              if (label.toLowerCase().includes('sales amount') ||
+                  label.toLowerCase().includes('total sales') ||
+                  label.toLowerCase().includes('revenue')) {
+                return `${label}: $${value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+              } else if (label.toLowerCase().includes('price') || 
+                  label.toLowerCase().includes('avg') ||
+                  label.toLowerCase().includes('four star') ||
+                  label === 'Avg Price') {
                 return `${label}: $${value.toFixed(1)}`;
+              } else if (label.toLowerCase().includes('quantity') || 
+                         label.toLowerCase().includes('sale quantity')) {
+                return `${label}: ${value.toLocaleString()}`;
+              } else {
+                // Default: if value looks like price data, format as currency
+                if (value > 0.1 && value < 1000) {
+                  return `${label}: $${value.toFixed(1)}`;
+                }
+                return `${label}: ${value.toLocaleString()}`;
               }
-              return `${label}: ${value.toLocaleString()}`;
             }
           }
         }
       }
-    }
-  };
+    };
+  }, [isMobileView]);
   
   return (
     <div className="my-4">
-      <h3 className="font-bold mb-2">Price History ({groupKey})</h3>
-      <select value={selected} onChange={e => setSelected(e.target.value)} className="border p-1 rounded mb-2">{groups.map(g => <option key={g}>{g}</option>)}</select>
-      <Line data={getTimelineChartData(filtered)} options={priceHistoryOptions} />
+      <h3 className="font-bold mb-2 text-sm md:text-base">Price History ({groupKey})</h3>
+      <select 
+        value={selected} 
+        onChange={e => setSelected(e.target.value)} 
+        className="border p-2 rounded mb-4 w-full md:w-auto text-sm md:text-base bg-white shadow-sm"
+      >
+        {groups.map(g => <option key={g} value={g}>{g}</option>)}
+      </select>
+      <section className="bg-[#F9F6F4] rounded-2xl p-3 md:p-6 shadow-md">
+        {/* Fixed height container for mobile optimization */}
+        <div className="h-64 md:h-80 lg:h-96 w-full">
+          <Line data={getTimelineChartData(filtered)} options={priceHistoryOptions} />
+        </div>
+      </section>
     </div>
   );
 };
@@ -1953,6 +2032,12 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
   const [retailer, setRetailer] = useState('All');
   const [variety, setVariety] = useState('All');
   const [size, setSize] = useState('All');
+  
+  // Use the custom hook to detect mobile
+  const isMobile = useIsMobile();
+
+  // Create dynamic chart options for this component instance
+  const chartOptions = useMemo(() => getDynamicChartOptions(isMobile), [isMobile]);
 
   // Load data automatically on initialization
   useEffect(() => {
@@ -2044,8 +2129,11 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
           <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Sales by Variety</h2>
           <p className="text-gray-600 mb-4 text-sm">Breakdown of sales performance across different grape varieties, showing market preferences and seasonal trends.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Visual breakdown of sales performance across different grape varieties, showing market preferences and demand patterns.</p>
-          <section className="bg-[#F9F6F4] rounded-2xl p-6 shadow-md">
-            <Bar data={getVarietyChartData(salesData)} options={chartOptions} />
+          <section className="bg-[#F9F6F4] rounded-2xl p-3 md:p-6 shadow-md">
+            {/* Fixed height container for mobile optimization */}
+            <div className="h-64 md:h-80 lg:h-96 w-full">
+              <Bar data={getVarietyChartData(salesData)} options={chartOptions} />
+            </div>
           </section>
         </div>
         
@@ -2054,8 +2142,11 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
           <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Sales Timeline</h2>
           <p className="text-gray-600 mb-4 text-sm">Chronological analysis of sales patterns showing temporal trends, seasonality, and growth trajectories over time.</p>
           <p className="text-gray-600 text-sm mb-6 italic">Chronological view of sales activity over time, revealing seasonal patterns and market trends throughout the period.</p>
-          <section className="bg-[#F9F6F4] rounded-2xl p-6 shadow-md">
-            <Line data={getTimelineChartData(salesData)} options={chartOptions} />
+          <section className="bg-[#F9F6F4] rounded-2xl p-3 md:p-6 shadow-md">
+            {/* Fixed height container for mobile optimization */}
+            <div className="h-64 md:h-80 lg:h-96 w-full">
+              <Line data={getTimelineChartData(salesData)} options={chartOptions} />
+            </div>
           </section>
         </div>
         
