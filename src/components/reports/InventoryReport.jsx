@@ -148,17 +148,16 @@ const InventoryReport = ({ onRefsUpdate }) => {
 
   return (
     <div className="min-h-screen bg-[#F9F6F4] w-full m-0 p-0">
-      <div className="space-y-8 p-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-extrabold text-center mb-8 text-[#EE6C4D]">Inventory Report</h1>
-          <p className="text-lg text-gray-600 max-w-4xl mx-auto">
-            Comprehensive analysis of initial stock levels, distribution, and inventory composition across exporters and varieties.
-          </p>
-        </div>
-
-      {/* Main Content */}
-      <div ref={sectionRefs['Initial Stock']} className="bg-[#F9F6F4] rounded-2xl p-6 shadow-md">
+      <div className="space-y-8 p-6 pt-8">{/* pt-8 reducido ya que el Header ahora es visible */}
+        {/* Main Content */}
+        <div ref={sectionRefs['Initial Stock']} className="bg-[#F9F6F4] rounded-2xl p-6 shadow-md">
+          {/* Header dentro del contenido principal */}
+          <div className="text-center mb-8">
+            <h1 className="text-5xl font-extrabold text-center mb-8 text-[#EE6C4D]">Inventory Report</h1>
+            <p className="text-lg text-gray-600 max-w-4xl mx-auto">
+              Comprehensive analysis of initial stock levels, distribution, and inventory composition across exporters and varieties.
+            </p>
+          </div>
         <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">
           Initial Stock Analysis
         </h2>
@@ -167,7 +166,7 @@ const InventoryReport = ({ onRefsUpdate }) => {
         <KPISection
           title="KPIs"
           subtitle="Key Performance Indicators - Inventory Analysis"
-          titleColor="text-[#3D5A80]"
+          titleColor="text-[#EE6C4D]"
           backgroundColor="bg-[#F9F6F4]"
           kpis={[
             { 

@@ -2,7 +2,7 @@ import React from 'react';
 
 const Header = () => {
   return (
-    <header className="bg-famus-blue shadow-md">
+    <header className="bg-famus-blue shadow-md mt-16">{/* mt-16 para no quedar tapado por la navegación sticky */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Left: Famus HTML Report */}

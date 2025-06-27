@@ -39,9 +39,13 @@ function App() {
 
   const handleSectionScroll = (sectionId) => {
     if (sectionRefs[sectionId] && sectionRefs[sectionId].current) {
-      sectionRefs[sectionId].current.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
+      const element = sectionRefs[sectionId].current;
+      const offset = 120; // Altura de la navegación + Header visible
+      const elementPosition = element.offsetTop - offset;
+      
+      window.scrollTo({
+        top: elementPosition,
+        behavior: 'smooth'
       });
     }
   };
@@ -54,6 +58,11 @@ function App() {
     setActiveReport(newReport);
     // Reset any error state when changing reports
     setError(null);
+    // Scroll to top when changing reports
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
 
   // Loading state
@@ -98,7 +107,7 @@ function App() {
         sectionRefs={sectionRefs}
         onSectionScroll={handleSectionScroll}
       />
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">{/* Padding-top ahora aplicado directamente en cada reporte */}
         <div className="fade-in">
           {activeReport === 'sales' && (
             <SalesDetailReport onRefsUpdate={handleRefsUpdate} />

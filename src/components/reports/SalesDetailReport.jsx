@@ -2005,7 +2005,7 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
 
   return (
     <div className="min-h-screen bg-[#F9F6F4] w-full m-0 p-0">
-      <div className="p-6 space-y-16 w-full max-w-none m-0">
+      <div className="p-6 space-y-16 w-full max-w-none m-0 pt-8">{/* pt-8 reducido ya que el Header ahora es visible */}
         <h1 className="text-5xl font-extrabold text-center mb-8 text-[#EE6C4D]">Sales Detail Report</h1>
         
         {/* 1. KPIs */}
