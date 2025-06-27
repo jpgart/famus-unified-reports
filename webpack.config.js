@@ -8,7 +8,7 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].[contenthash].js',
     clean: true,
-    publicPath: '/famus-unified-reports/',
+    publicPath: process.env.NODE_ENV === 'production' ? '/famus-unified-reports/' : '/',
   },
   resolve: {
     extensions: ['.js', '.jsx'],
@@ -66,6 +66,10 @@ module.exports = {
     port: 3000,
     open: true,
     hot: true,
+    historyApiFallback: true,
+    static: {
+      directory: path.join(__dirname, 'public'),
+    },
   },
   optimization: {
     splitChunks: {

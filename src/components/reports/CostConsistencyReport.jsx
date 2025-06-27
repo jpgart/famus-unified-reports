@@ -9,7 +9,7 @@ import {
   analyzeSpecificChargeFromEmbedded,
   analyzeRepackingChargesFromEmbedded
 } from '../../data/costDataEmbedded';
-import { formatNumber, formatPercentage, formatPrice, formatCurrency } from '../../utils/formatters';
+import { formatNumber, formatPercentage, formatPrice } from '../../utils/formatters';
 import { getDefaultChartOptions, FAMUS_COLORS, CHART_COLORS, BLUE_PALETTE } from '../../utils/chartConfig';
 import { KPISection } from '../common';
 import { filterExportersList, isExporterExcluded } from '../../utils/dataFiltering';
@@ -176,7 +176,7 @@ const KPICards = ({ metrics }) => {
     <div className="my-10">
       {/* KPI Section */}
       <KPISection
-        title="KPIs"
+        title="📊 KPIs"
         subtitle="Key Performance Indicators - Cost Consistency Analysis"
         titleColor="text-[#EE6C4D]"
         backgroundColor="bg-[#F9F6F4]"
@@ -187,13 +187,13 @@ const KPICards = ({ metrics }) => {
       />
 
       {/* Exporter Filter */}
-      <div className="flex flex-col sm:flex-row justify-center items-center my-8 gap-4">
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <span className="font-semibold text-lg text-[#3D5A80] text-center sm:text-left">Filter by Exporter:</span>
+      <div className="flex justify-center my-8">
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-lg text-[#3D5A80]">Filter by Exporter:</span>
           <select 
             value={selectedExporter} 
             onChange={e => setSelectedExporter(e.target.value)} 
-            className="border border-[#3D5A80] p-2 rounded text-lg bg-white focus:ring-2 focus:ring-[#EE6C4D] w-full sm:w-auto min-w-[200px]"
+            className="border border-[#3D5A80] p-2 rounded text-lg bg-white focus:ring-2 focus:ring-[#EE6C4D]"
           >
             {exporters.map(e => <option key={e} value={e}>{e}</option>)}
           </select>
@@ -216,7 +216,18 @@ const KPICards = ({ metrics }) => {
         </div>
       </div>
 
-      {/* Chart Section - REMOVED: First bar chart no longer needed */}
+      {/* Chart Section */}
+      {selectedExporter === 'All' && (
+        <div className="bg-white rounded-2xl shadow-md p-6 mx-auto max-w-6xl">
+          <div className="relative h-[400px] sm:h-[500px] md:h-[600px]">
+            <Bar data={chart.data} options={chart.options} />
+          </div>
+          <div className="mt-4 text-center text-gray-600 text-sm bg-gray-50 p-3 rounded-lg">
+            <p className="font-semibold mb-1">Cost Efficiency Analysis by Exporter</p>
+            <p>This chart displays the average cost per box for each exporter. Lower costs indicate better operational efficiency and cost management practices.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -487,24 +498,6 @@ const ExporterCostComparator = ({ metrics }) => {
 
   const chartOptions = {
     ...getDefaultChartOptions('Cost vs Consistency by Exporter'),
-    plugins: {
-      ...getDefaultChartOptions('Cost vs Consistency by Exporter').plugins,
-      zoom: {
-        zoom: {
-          wheel: {
-            enabled: false,
-          },
-          pinch: {
-            enabled: false
-          },
-          mode: 'xy',
-        },
-        pan: {
-          enabled: false,
-          mode: 'xy'
-        }
-      }
-    },
     scales: {
       y: {
         type: 'linear',
@@ -641,18 +634,11 @@ const OceanFreightAnalysis = () => {
     // Convert byExporter object to array
     const exportersArray = Object.values(freightData.byExporter);
     
-    // For Chilean exporters (MDT, Agrovita, Quintay), Ocean freight should be very similar
-    // Use a more sensitive threshold of 15% for these exporters
-    const chileanExporters = ['MDT', 'AGROVITA', 'QUINTAY'];
-    
     exportersArray.forEach(exporter => {
       const deviation = Math.abs(exporter.avgPerBox - avgFreight);
       const percentageDeviation = avgFreight > 0 ? (deviation / avgFreight) * 100 : 0;
       
-      // Use stricter threshold for Chilean exporters (15%) vs others (30%)
-      const threshold = chileanExporters.includes(exporter.exporter?.toUpperCase()) ? 15 : 30;
-      
-      if (percentageDeviation > threshold) {
+      if (percentageDeviation > 30) { // More than 30% deviation
         inconsistencies.push({
           exporter: exporter.exporter,
           cost: exporter.avgPerBox,
@@ -715,7 +701,7 @@ const OceanFreightAnalysis = () => {
       
       {/* KPI Section */}
       <KPISection
-        title="KPIs"
+        title="🚢 Ocean Freight KPIs"
         subtitle="Key metrics for ocean freight cost analysis"
         titleColor="text-[#3D5A80]"
         backgroundColor="bg-white"
@@ -747,7 +733,7 @@ const OceanFreightAnalysis = () => {
         ]}
         chart={null}
         showChart={false}
-        containerClass="rounded-xl"
+        containerClass=""
       />
 
       {/* Chart */}
@@ -833,11 +819,7 @@ const OceanFreightAnalysis = () => {
                 const avgFreight = freightData.summary?.avgPerBox || 0;
                 const deviation = Math.abs(exporter.avgPerBox - avgFreight);
                 const percentageDeviation = avgFreight > 0 ? (deviation / avgFreight) * 100 : 0;
-                
-                // Use same logic as detectInconsistencies function
-                const chileanExporters = ['MDT', 'AGROVITA', 'QUINTAY'];
-                const threshold = chileanExporters.includes(exporter.exporter?.toUpperCase()) ? 15 : 30;
-                const isInconsistent = percentageDeviation > threshold;
+                const isInconsistent = percentageDeviation > 30;
                 
                 return (
                   <tr key={index} className={index % 2 === 0 ? 'bg-[#E8F4F8]' : 'bg-white'}>
@@ -950,7 +932,7 @@ const RepackingAnalysis = () => {
       
       {/* KPI Section */}
       <KPISection
-        title="KPIs"
+        title="📦 Repacking KPIs"
         subtitle="Key metrics for repacking and packing materials analysis"
         titleColor="text-[#3D5A80]"
         backgroundColor="bg-white"
@@ -998,7 +980,7 @@ const RepackingAnalysis = () => {
                     ((analysisData.analysis.packingMaterialsAmount / analysisData.analysis.totalAmount) * 100).toFixed(1) : 0}%
                 </span>
               </div>
-              <div className="text-lg font-bold text-[#3D5A80]">{formatCurrency(analysisData.analysis.packingMaterialsAmount || 0)}</div>
+              <div className="text-lg font-bold text-[#3D5A80]">{formatPrice(analysisData.analysis.packingMaterialsAmount || 0)}</div>
               <div className="text-xs text-gray-600">{formatNumber(analysisData.analysis.packingMaterialsRecords || 0)} records</div>
             </div>
             <div className="bg-white p-3 rounded border">
@@ -1009,7 +991,7 @@ const RepackingAnalysis = () => {
                     ((analysisData.analysis.repackingChargesAmount / analysisData.analysis.totalAmount) * 100).toFixed(1) : 0}%
                 </span>
               </div>
-              <div className="text-lg font-bold text-[#3D5A80]">{formatCurrency(analysisData.analysis.repackingChargesAmount || 0)}</div>
+              <div className="text-lg font-bold text-[#3D5A80]">{formatPrice(analysisData.analysis.repackingChargesAmount || 0)}</div>
               <div className="text-xs text-gray-600">{formatNumber(analysisData.analysis.repackingChargesRecords || 0)} records</div>
             </div>
           </div>
@@ -1056,9 +1038,9 @@ const RepackingAnalysis = () => {
             {exportersArray.map((row, index) => (
               <tr key={row.exporter || `exporter-${index}`} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                 <td className="p-2 font-medium">{row.exporter || 'Unknown'}</td>
-                <td className="p-2 text-right font-semibold">{formatCurrency(row.totalAmount || 0)}</td>
-                <td className="p-2 text-right text-blue-600">{formatCurrency(row.packingMaterials || 0)}</td>
-                <td className="p-2 text-right text-green-600">{formatCurrency(row.repackingCharges || 0)}</td>
+                <td className="p-2 text-right font-semibold">{formatPrice(row.totalAmount || 0)}</td>
+                <td className="p-2 text-right text-blue-600">{formatPrice(row.packingMaterials || 0)}</td>
+                <td className="p-2 text-right text-green-600">{formatPrice(row.repackingCharges || 0)}</td>
                 <td className="p-2 text-right">{formatPrice(row.avgPerBox || 0)}</td>
                 <td className="p-2 text-right">{formatNumber(row.lots || 0)}</td>
               </tr>
@@ -1076,7 +1058,6 @@ const OutlierAnalysis = ({ metrics }) => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [chargeData, setChargeData] = useState([]);
-  const [filterExporter, setFilterExporter] = useState('All');
   const itemsPerPage = 15;
 
   // Load charge data when component mounts
@@ -1143,12 +1124,7 @@ const OutlierAnalysis = ({ metrics }) => {
     
     // Define outliers as values beyond 2 standard deviations
     const threshold = 2;
-    let outliers = lotids.filter(l => Math.abs(l.costPerBox - mean) > threshold * stdDev);
-    
-    // Apply exporter filter
-    if (filterExporter !== 'All') {
-      outliers = outliers.filter(l => l.exporter === filterExporter);
-    }
+    const outliers = lotids.filter(l => Math.abs(l.costPerBox - mean) > threshold * stdDev);
     
     const stats = {
       mean,
@@ -1160,17 +1136,7 @@ const OutlierAnalysis = ({ metrics }) => {
     };
 
     return { outliers, stats };
-  }, [metrics, filterExporter]);
-
-  // Get unique exporters for filter
-  const availableExporters = useMemo(() => {
-    const allOutliers = Object.values(metrics).filter(l => 
-      l.costPerBox !== null && 
-      Math.abs(l.costPerBox - (outlierAnalysis.stats?.mean || 0)) > 2 * (outlierAnalysis.stats?.stdDev || 1)
-    );
-    const exporters = [...new Set(allOutliers.map(l => l.exporter))].filter(Boolean);
-    return ['All', ...exporters.sort()];
-  }, [metrics, outlierAnalysis.stats]);
+  }, [metrics]);
 
   if (!outlierAnalysis.stats) {
     return (
@@ -1343,23 +1309,8 @@ const OutlierAnalysis = ({ metrics }) => {
       {/* Outlier Details Table with Pagination */}
       {outlierAnalysis.outliers.length > 0 && (
         <div className="bg-white rounded-lg overflow-hidden shadow-sm">
-          <div className="bg-[#EE6C4D] text-white p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="bg-[#EE6C4D] text-white p-3">
             <h4 className="font-semibold">Detailed Outlier Analysis ({outlierAnalysis.outliers.length} total outliers)</h4>
-            <div className="flex items-center gap-2">
-              <span className="text-sm">Filter by Exporter:</span>
-              <select 
-                value={filterExporter} 
-                onChange={e => {
-                  setFilterExporter(e.target.value);
-                  setCurrentPage(1); // Reset to first page when filtering
-                }}
-                className="border border-white bg-white text-gray-800 p-1 rounded text-sm focus:ring-2 focus:ring-white"
-              >
-                {availableExporters.map(exp => (
-                  <option key={exp} value={exp}>{exp}</option>
-                ))}
-              </select>
-            </div>
           </div>
           <div className="overflow-auto max-h-96">
             <table className="w-full text-sm">
@@ -1585,65 +1536,15 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
   const [filterExporter, setFilterExporter] = useState('');
   const [filterIssueType, setFilterIssueType] = useState('');
   const [filterSeverity, setFilterSeverity] = useState('');
-  const [modalSortBy, setModalSortBy] = useState('totalAmount');
-  const [modalSortOrder, setModalSortOrder] = useState('desc');
   const itemsPerPage = 15;
 
   const consistencyData = useMemo(() => {
     const lots = Object.values(metrics);
     const issues = [];
     
-    // Calculate exporter averages first
-    const exporterStats = {};
-    lots.forEach(lot => {
-      if (lot.exporter && lot.costPerBox !== null) {
-        if (!exporterStats[lot.exporter]) {
-          exporterStats[lot.exporter] = { costs: [], totalCosts: 0, count: 0 };
-        }
-        exporterStats[lot.exporter].costs.push(lot.costPerBox);
-        exporterStats[lot.exporter].totalCosts += lot.costPerBox;
-        exporterStats[lot.exporter].count++;
-      }
-    });
-    
-    // Calculate averages
-    Object.keys(exporterStats).forEach(exporter => {
-      exporterStats[exporter].average = exporterStats[exporter].totalCosts / exporterStats[exporter].count;
-    });
-    
-    // First, check for duplicate Lotids with different exporters
-    const lotIdExporterMap = {};
-    lots.forEach(lot => {
-      const lotId = lot.lotid;
-      const exporter = lot.exporter || 'Unknown';
-      
-      if (!lotIdExporterMap[lotId]) {
-        lotIdExporterMap[lotId] = new Set();
-      }
-      lotIdExporterMap[lotId].add(exporter);
-    });
-    
-    // Check for Lotids with multiple exporters
-    Object.entries(lotIdExporterMap).forEach(([lotId, exporterSet]) => {
-      if (exporterSet.size > 1) {
-        const exporterList = Array.from(exporterSet).join(', ');
-        issues.push({
-          lotId: lotId,
-          exporter: exporterList,
-          type: 'Multiple Exporters',
-          severity: 'Critical',
-          description: `Lot ID ${lotId} is associated with multiple exporters: ${exporterList}`,
-          costPerBox: null,
-          totalCharges: null,
-          exporterAvgCostPerBox: null
-        });
-      }
-    });
-    
     lots.forEach(lot => {
       // Get exporter info for the issue
       const exporter = lot.exporter || 'Unknown';
-      const exporterAvg = exporterStats[exporter]?.average || null;
       
       // Check for missing critical data
       if (!lot.exporter || lot.exporter === '') {
@@ -1654,8 +1555,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
           severity: 'High',
           description: 'Lot missing exporter information',
           costPerBox: lot.costPerBox,
-          totalCharges: lot.totalChargeAmount,
-          exporterAvgCostPerBox: null
+          totalCharges: lot.totalCharges
         });
       }
       
@@ -1668,12 +1568,11 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
           severity: 'High',
           description: 'Cost per box is null or zero',
           costPerBox: lot.costPerBox,
-          totalCharges: lot.totalChargeAmount,
-          exporterAvgCostPerBox: exporterAvg
+          totalCharges: lot.totalCharges
         });
       }
       
-      // Check for outlier costs (> 3 standard deviations from global)
+      // Check for outlier costs (> 3 standard deviations)
       const validCosts = lots.filter(l => l.costPerBox !== null).map(l => l.costPerBox);
       if (validCosts.length > 0) {
         const mean = validCosts.reduce((a, b) => a + b, 0) / validCosts.length;
@@ -1685,137 +1584,15 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
             exporter: exporter,
             type: 'Statistical Outlier',
             severity: 'Medium',
-            description: `Cost significantly deviates from global average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)})`,
+            description: `Cost significantly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)})`,
             costPerBox: lot.costPerBox,
-            totalCharges: lot.totalChargeAmount,
-            exporterAvgCostPerBox: exporterAvg
-          });
-        }
-      }
-      
-      // Check for HIGH deviation from exporter average (>50%)
-      if (lot.costPerBox !== null && exporterAvg && exporterStats[exporter]?.count > 1) {
-        const deviation = Math.abs((lot.costPerBox - exporterAvg) / exporterAvg * 100);
-        if (deviation > 50) {
-          issues.push({
-            lotId: lot.lotid,
-            exporter: exporter,
-            type: 'High Cost Deviation',
-            severity: 'High',
-            description: `Cost per box (${formatPrice(lot.costPerBox)}) deviates ${deviation.toFixed(1)}% from exporter average (${formatPrice(exporterAvg)})`,
-            costPerBox: lot.costPerBox,
-            totalCharges: lot.totalChargeAmount,
-            exporterAvgCostPerBox: exporterAvg
-          });
-        } else if (deviation > 30) {
-          // Medium deviation (30-50%)
-          issues.push({
-            lotId: lot.lotid,
-            exporter: exporter,
-            type: 'Medium Cost Deviation',
-            severity: 'Medium',
-            description: `Cost per box (${formatPrice(lot.costPerBox)}) deviates ${deviation.toFixed(1)}% from exporter average (${formatPrice(exporterAvg)})`,
-            costPerBox: lot.costPerBox,
-            totalCharges: lot.totalChargeAmount,
-            exporterAvgCostPerBox: exporterAvg
-          });
-        }
-      }
-      
-      // NEW: Check for significant individual charge deviations
-      if (lot.costPerBox !== null && lot.totalChargeAmount > 0 && exporter !== 'Unknown') {
-        const lotCharges = chargeData.filter(charge => charge.Lotid === lot.lotid || charge.lotid === lot.lotid);
-        const exporterLots = Object.values(metrics).filter(l => l.exporter === exporter);
-        
-        // Calculate exporter averages for each charge type
-        const exporterChargesByType = {};
-        exporterLots.forEach(exporterLot => {
-          const exporterLotCharges = chargeData.filter(charge => 
-            (charge.Lotid === exporterLot.lotid || charge.lotid === exporterLot.lotid)
-          );
-          
-          exporterLotCharges.forEach(charge => {
-            const chargeName = charge.chargeName || charge.Chargedescr || 'Unknown';
-            const chargeAmount = parseFloat(charge.chargeAmount || charge.Chgamt || 0);
-            const totalBoxes = exporterLot.totalBoxes || 1;
-            const costPerBox = chargeAmount / totalBoxes;
-            
-            if (!exporterChargesByType[chargeName]) {
-              exporterChargesByType[chargeName] = [];
-            }
-            exporterChargesByType[chargeName].push(costPerBox);
-          });
-        });
-        
-        // Calculate averages for each charge type
-        const exporterChargeAverages = {};
-        Object.keys(exporterChargesByType).forEach(chargeName => {
-          const costs = exporterChargesByType[chargeName];
-          if (costs.length > 0) {
-            exporterChargeAverages[chargeName] = costs.reduce((sum, cost) => sum + cost, 0) / costs.length;
-          }
-        });
-        
-        // Check individual charge deviations for this lot
-        const significantDeviations = [];
-        const lotTotalBoxes = lot.totalBoxes || 1;
-        
-        lotCharges.forEach(charge => {
-          const chargeName = charge.chargeName || charge.Chargedescr || 'Unknown';
-          const chargeAmount = parseFloat(charge.chargeAmount || charge.Chgamt || 0);
-          const costPerBox = chargeAmount / lotTotalBoxes;
-          const exporterAvgForCharge = exporterChargeAverages[chargeName];
-          
-          if (exporterAvgForCharge && exporterAvgForCharge > 0) {
-            const chargeDeviation = Math.abs((costPerBox - exporterAvgForCharge) / exporterAvgForCharge * 100);
-            if (chargeDeviation > 50) {
-              significantDeviations.push({
-                chargeName,
-                deviation: chargeDeviation,
-                costPerBox,
-                exporterAvg: exporterAvgForCharge
-              });
-            }
-          }
-        });
-        
-        // Determine severity based on individual charge deviations
-        if (significantDeviations.length > 0) {
-          const maxDeviation = Math.max(...significantDeviations.map(d => d.deviation));
-          const criticalCharges = significantDeviations.filter(d => d.deviation > 80).length;
-          const highCharges = significantDeviations.filter(d => d.deviation > 50).length;
-          
-          let severity, type, description;
-          
-          if (criticalCharges > 0 || maxDeviation > 80) {
-            severity = 'High';
-            type = 'Critical Charge Deviation';
-            description = `${significantDeviations.length} charge(s) with extreme deviations (max: ${maxDeviation.toFixed(1)}%)`;
-          } else if (highCharges >= 2 || maxDeviation > 60) {
-            severity = 'Medium';
-            type = 'Multiple Charge Deviations';
-            description = `${significantDeviations.length} charge(s) with significant deviations (max: ${maxDeviation.toFixed(1)}%)`;
-          } else {
-            severity = 'Medium';
-            type = 'Individual Charge Deviation';
-            description = `${significantDeviations.length} charge(s) deviate significantly from exporter average`;
-          }
-          
-          issues.push({
-            lotId: lot.lotid,
-            exporter: exporter,
-            type: type,
-            severity: severity,
-            description: description,
-            costPerBox: lot.costPerBox,
-            totalCharges: lot.totalChargeAmount,
-            exporterAvgCostPerBox: exporterAvg
+            totalCharges: lot.totalCharges
           });
         }
       }
 
       // Check for missing total charges
-      if (!lot.totalChargeAmount || lot.totalChargeAmount === 0) {
+      if (!lot.totalCharges || lot.totalCharges === 0) {
         issues.push({
           lotId: lot.lotid,
           exporter: exporter,
@@ -1823,36 +1600,13 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
           severity: 'Medium',
           description: 'No charge data found for this lot',
           costPerBox: lot.costPerBox,
-          totalCharges: 0,
-          exporterAvgCostPerBox: exporterAvg
+          totalCharges: 0
         });
-      }
-      
-      // Add all lots as "Complete Records" with Low severity for review (only if no other issues found)
-      if (lot.costPerBox !== null && lot.totalChargeAmount > 0) {
-        const hasOtherIssues = issues.some(issue => 
-          issue.lotId === lot.lotid && 
-          issue.severity !== 'Low' && 
-          issue.type !== 'Complete Record'
-        );
-        
-        if (!hasOtherIssues) {
-          issues.push({
-            lotId: lot.lotid,
-            exporter: exporter,
-            type: 'Complete Record',
-            severity: 'Low',
-            description: 'Complete lot record available for review',
-            costPerBox: lot.costPerBox,
-            totalCharges: lot.totalChargeAmount,
-            exporterAvgCostPerBox: exporterAvg
-          });
-        }
       }
     });
     
     return issues.sort((a, b) => {
-      const severityOrder = { 'Critical': 4, 'High': 3, 'Medium': 2, 'Low': 1 };
+      const severityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
       return severityOrder[b.severity] - severityOrder[a.severity];
     });
   }, [metrics]);
@@ -1888,79 +1642,14 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
     const lot = metrics[lotId];
     if (!lot) return null;
 
-    const lotCharges = chargeData.filter(charge => charge.Lotid === lotId || charge.lotid === lotId);
-    
-    // Calculate exporter averages for each charge type
-    const exporterChargeAverages = {};
-    const exporterLots = Object.values(metrics).filter(l => l.exporter === lot.exporter);
-    
-    // Group all charges by type for this exporter
-    const exporterChargesByType = {};
-    exporterLots.forEach(exporterLot => {
-      const exporterLotCharges = chargeData.filter(charge => 
-        (charge.Lotid === exporterLot.lotid || charge.lotid === exporterLot.lotid)
-      );
-      
-      exporterLotCharges.forEach(charge => {
-        const chargeName = charge.chargeName || charge.Chargedescr || 'Unknown';
-        const chargeAmount = parseFloat(charge.chargeAmount || charge.Chgamt || 0);
-        const totalBoxes = exporterLot.totalBoxes || 1;
-        const costPerBox = chargeAmount / totalBoxes;
-        
-        if (!exporterChargesByType[chargeName]) {
-          exporterChargesByType[chargeName] = [];
-        }
-        exporterChargesByType[chargeName].push(costPerBox);
-      });
-    });
-    
-    // Calculate averages
-    Object.keys(exporterChargesByType).forEach(chargeName => {
-      const costs = exporterChargesByType[chargeName];
-      if (costs.length > 0) {
-        exporterChargeAverages[chargeName] = costs.reduce((sum, cost) => sum + cost, 0) / costs.length;
-      }
-    });
-
-    // Build charge breakdown with comparisons
-    const chargeBreakdownWithComparisons = {};
-    const lotTotalBoxes = lot.totalBoxes || 1;
-    
-    lotCharges.forEach(charge => {
-      const chargeName = charge.chargeName || charge.Chargedescr || 'Unknown';
-      const chargeAmount = parseFloat(charge.chargeAmount || charge.Chgamt || 0);
-      const costPerBox = chargeAmount / lotTotalBoxes;
-      const exporterAvg = exporterChargeAverages[chargeName] || 0;
-      const deviation = exporterAvg > 0 ? ((costPerBox - exporterAvg) / exporterAvg * 100) : 0;
-      
-      if (!chargeBreakdownWithComparisons[chargeName]) {
-        chargeBreakdownWithComparisons[chargeName] = {
-          totalAmount: 0,
-          costPerBox: 0,
-          exporterAvgCostPerBox: exporterAvg,
-          deviation: 0,
-          count: 0
-        };
-      }
-      
-      chargeBreakdownWithComparisons[chargeName].totalAmount += chargeAmount;
-      chargeBreakdownWithComparisons[chargeName].costPerBox = chargeBreakdownWithComparisons[chargeName].totalAmount / lotTotalBoxes;
-      chargeBreakdownWithComparisons[chargeName].exporterAvgCostPerBox = exporterAvg;
-      chargeBreakdownWithComparisons[chargeName].deviation = exporterAvg > 0 ? 
-        ((chargeBreakdownWithComparisons[chargeName].costPerBox - exporterAvg) / exporterAvg * 100) : 0;
-      chargeBreakdownWithComparisons[chargeName].count++;
-    });
-
+    const lotCharges = chargeData.filter(charge => charge.lotid === lotId);
     return {
       lot,
       charges: lotCharges,
       chargeBreakdown: lotCharges.reduce((acc, charge) => {
-        const chargeName = charge.chargeName || charge.Chargedescr || 'Unknown';
-        const chargeAmount = parseFloat(charge.chargeAmount || charge.Chgamt || 0);
-        acc[chargeName] = (acc[chargeName] || 0) + chargeAmount;
+        acc[charge.chargeName] = (acc[charge.chargeName] || 0) + parseFloat(charge.chargeAmount || 0);
         return acc;
-      }, {}),
-      chargeBreakdownWithComparisons
+      }, {})
     };
   };
 
@@ -2074,8 +1763,6 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Type</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost/Box</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exporter Avg</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Charges</th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
             </tr>
           </thead>
@@ -2087,7 +1774,6 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{issue.type}</td>
                 <td className="px-4 py-2 whitespace-nowrap">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    issue.severity === 'Critical' ? 'bg-red-200 text-red-900 border border-red-300' :
                     issue.severity === 'High' ? 'bg-red-100 text-red-800' : 
                     issue.severity === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 
                     'bg-green-100 text-green-800'
@@ -2097,12 +1783,6 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                   {issue.costPerBox !== null ? formatPrice(issue.costPerBox) : 'N/A'}
-                </td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                  {issue.exporterAvgCostPerBox !== null ? formatPrice(issue.exporterAvgCostPerBox) : 'N/A'}
-                </td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                  ${(issue.totalCharges || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm">
                   <button
@@ -2167,7 +1847,6 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
                   <div className="space-y-2 text-sm">
                     <div><strong>Type:</strong> {selectedIssue.type}</div>
                     <div><strong>Severity:</strong> <span className={`px-2 py-1 rounded text-xs ${
-                      selectedIssue.severity === 'Critical' ? 'bg-red-200 text-red-900 border border-red-300' :
                       selectedIssue.severity === 'High' ? 'bg-red-100 text-red-800' : 
                       selectedIssue.severity === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 
                       'bg-green-100 text-green-800'
@@ -2181,8 +1860,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
                   <div className="space-y-2 text-sm">
                     <div><strong>Exporter:</strong> {selectedIssue.details.lot.exporter || 'Unknown'}</div>
                     <div><strong>Cost per Box:</strong> {selectedIssue.details.lot.costPerBox ? formatPrice(selectedIssue.details.lot.costPerBox) : 'N/A'}</div>
-                    <div><strong>Total Boxes:</strong> {(selectedIssue.details.lot.totalBoxes || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
-                    <div><strong>Total Charges:</strong> ${(selectedIssue.details.lot.totalChargeAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+                    <div><strong>Total Charges:</strong> {formatPrice(selectedIssue.details.lot.totalCharges || 0)}</div>
                     <div><strong>Charge Records:</strong> {selectedIssue.details.charges.length}</div>
                   </div>
                 </div>
@@ -2190,186 +1868,24 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
 
               {selectedIssue.details.charges.length > 0 && (
                 <div className="mt-6">
-                  <h4 className="font-semibold mb-4">Charge Breakdown & Exporter Comparison</h4>
+                  <h4 className="font-semibold mb-2">Charge Breakdown</h4>
                   <div className="overflow-x-auto">
                     <table className="min-w-full table-auto text-sm">
                       <thead>
                         <tr className="bg-gray-50">
-                          <th 
-                            onClick={() => {
-                              if (modalSortBy === 'chargeName') {
-                                setModalSortOrder(modalSortOrder === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setModalSortBy('chargeName');
-                                setModalSortOrder('asc');
-                              }
-                            }}
-                            className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-32"
-                          >
-                            <div className="leading-tight">
-                              Charge<br/>Type
-                              {modalSortBy === 'chargeName' && (modalSortOrder === 'asc' ? ' ↑' : ' ↓')}
-                            </div>
-                          </th>
-                          <th 
-                            onClick={() => {
-                              if (modalSortBy === 'totalAmount') {
-                                setModalSortOrder(modalSortOrder === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setModalSortBy('totalAmount');
-                                setModalSortOrder('desc');
-                              }
-                            }}
-                            className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
-                          >
-                            <div className="leading-tight">
-                              Amount
-                              {modalSortBy === 'totalAmount' && (modalSortOrder === 'asc' ? ' ↑' : ' ↓')}
-                            </div>
-                          </th>
-                          <th 
-                            onClick={() => {
-                              if (modalSortBy === 'costPerBox') {
-                                setModalSortOrder(modalSortOrder === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setModalSortBy('costPerBox');
-                                setModalSortOrder('desc');
-                              }
-                            }}
-                            className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
-                          >
-                            <div className="leading-tight">
-                              Cost per<br/>Box
-                              {modalSortBy === 'costPerBox' && (modalSortOrder === 'asc' ? ' ↑' : ' ↓')}
-                            </div>
-                          </th>
-                          <th 
-                            onClick={() => {
-                              if (modalSortBy === 'exporterAvg') {
-                                setModalSortOrder(modalSortOrder === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setModalSortBy('exporterAvg');
-                                setModalSortOrder('desc');
-                              }
-                            }}
-                            className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-28"
-                          >
-                            <div className="leading-tight">
-                              Exporter Avg<br/>Cost/Box
-                              {modalSortBy === 'exporterAvg' && (modalSortOrder === 'asc' ? ' ↑' : ' ↓')}
-                            </div>
-                          </th>
-                          <th 
-                            onClick={() => {
-                              if (modalSortBy === 'deviation') {
-                                setModalSortOrder(modalSortOrder === 'asc' ? 'desc' : 'asc');
-                              } else {
-                                setModalSortBy('deviation');
-                                setModalSortOrder('desc');
-                              }
-                            }}
-                            className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
-                          >
-                            <div className="leading-tight">
-                              vs Exporter<br/>Avg
-                              {modalSortBy === 'deviation' && (modalSortOrder === 'asc' ? ' ↑' : ' ↓')}
-                            </div>
-                          </th>
+                          <th className="px-3 py-2 text-left">Charge Type</th>
+                          <th className="px-3 py-2 text-right">Amount</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {(() => {
-                          const sortedData = Object.entries(selectedIssue.details.chargeBreakdownWithComparisons)
-                            .sort(([aName, aData], [bName, bData]) => {
-                              let aVal, bVal;
-                              switch(modalSortBy) {
-                                case 'chargeName':
-                                  aVal = aName;
-                                  bVal = bName;
-                                  return modalSortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-                                case 'totalAmount':
-                                  aVal = aData.totalAmount;
-                                  bVal = bData.totalAmount;
-                                  break;
-                                case 'costPerBox':
-                                  aVal = aData.costPerBox;
-                                  bVal = bData.costPerBox;
-                                  break;
-                                case 'exporterAvg':
-                                  aVal = aData.exporterAvgCostPerBox;
-                                  bVal = bData.exporterAvgCostPerBox;
-                                  break;
-                                case 'deviation':
-                                  aVal = Math.abs(aData.deviation);
-                                  bVal = Math.abs(bData.deviation);
-                                  break;
-                                default:
-                                  aVal = aData.totalAmount;
-                                  bVal = bData.totalAmount;
-                              }
-                              return modalSortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-                            });
-                          
-                          return sortedData.map(([type, data], index) => (
-                            <tr key={type} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                              <td className="px-3 py-2 font-medium text-center">{type}</td>
-                              <td className="px-3 py-2 text-center">${(data.totalAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
-                              <td className="px-3 py-2 text-center">{formatPrice(data.costPerBox)}</td>
-                              <td className="px-3 py-2 text-center">{formatPrice(data.exporterAvgCostPerBox)}</td>
-                              <td className="px-3 py-2 text-center">
-                                <span className={`font-medium ${
-                                  Math.abs(data.deviation) > 30 ? 'text-red-600' : 
-                                  Math.abs(data.deviation) > 15 ? 'text-yellow-600' : 'text-green-600'
-                                }`}>
-                                  {data.deviation > 0 ? '+' : ''}{data.deviation.toFixed(1)}%
-                                </span>
-                              </td>
-                            </tr>
-                          ));
-                        })()}
+                        {Object.entries(selectedIssue.details.chargeBreakdown).map(([type, amount]) => (
+                          <tr key={type} className="border-t">
+                            <td className="px-3 py-2">{type}</td>
+                            <td className="px-3 py-2 text-right">{formatPrice(amount)}</td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
-                  </div>
-                  
-                  {/* Conclusions Section */}
-                  <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <h5 className="font-semibold text-yellow-800 mb-3">📋 Conclusions:</h5>
-                    {(() => {
-                      const significantVariations = Object.entries(selectedIssue.details.chargeBreakdownWithComparisons)
-                        .filter(([, data]) => Math.abs(data.deviation) > 15)
-                        .sort(([, a], [, b]) => Math.abs(b.deviation) - Math.abs(a.deviation));
-                      
-                      if (significantVariations.length === 0) {
-                        return (
-                          <p className="text-yellow-700 text-sm">
-                            ✅ All charges are within acceptable range (≤15% deviation from exporter average).
-                          </p>
-                        );
-                      }
-                      
-                      return (
-                        <div className="space-y-2">
-                          <p className="text-yellow-700 text-sm font-medium">
-                            ⚠️ The following charges vary more than 15% from this exporter's average:
-                          </p>
-                          <ul className="space-y-1 text-sm text-yellow-700">
-                            {significantVariations.map(([chargeName, data]) => (
-                              <li key={chargeName} className="flex justify-between items-center">
-                                <span>
-                                  • <strong>{chargeName}</strong>: {formatPrice(data.costPerBox)} vs avg {formatPrice(data.exporterAvgCostPerBox)}
-                                </span>
-                                <span className={`font-bold ${data.deviation > 0 ? 'text-red-600' : 'text-blue-600'}`}>
-                                  ({data.deviation > 0 ? '+' : ''}{data.deviation.toFixed(1)}% {data.deviation > 0 ? 'above' : 'below'} average)
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                          <div className="mt-3 p-2 bg-yellow-100 rounded text-xs text-yellow-800">
-                            <strong>Recommendation:</strong> {significantVariations.length > 1 ? 'These charges' : 'This charge'} should be reviewed for potential cost optimization or data accuracy issues.
-                          </div>
-                        </div>
-                      );
-                    })()}
                   </div>
                 </div>
               )}
@@ -2527,7 +2043,7 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
     const lot = metrics[lotId];
     if (!lot) return null;
 
-    const lotCharges = chargeData.filter(charge => charge.Lotid === lotId || charge.lotid === lotId);
+    const lotCharges = chargeData.filter(charge => charge.lotid === lotId);
     
     // Calculate statistics for this exporter
     const exporterLots = Object.values(metrics)
@@ -2579,7 +2095,7 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
       const exporterChargesOfType = chargeData
         .filter(c => (c.chargeName || c.Chargedescr) === type)
         .filter(c => {
-          const lotOfCharge = metrics[c.Lotid || c.lotid];
+          const lotOfCharge = metrics[c.lotid];
           return lotOfCharge && lotOfCharge.exporter === lot.exporter;
         });
       
@@ -2591,7 +2107,7 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
       const globalChargesOfType = chargeData
         .filter(c => (c.chargeName || c.Chargedescr) === type)
         .filter(c => {
-          const lotOfCharge = metrics[c.Lotid || c.lotid];
+          const lotOfCharge = metrics[c.lotid];
           return lotOfCharge && !isExporterExcluded(lotOfCharge.exporter);
         });
       
@@ -2695,8 +2211,8 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
           >
             <option value="costPerBox-desc">Cost/Box (High to Low)</option>
             <option value="costPerBox-asc">Cost/Box (Low to High)</option>
-            <option value="totalChargeAmount-desc">Total Charges (High to Low)</option>
-            <option value="totalChargeAmount-asc">Total Charges (Low to High)</option>
+            <option value="totalCharges-desc">Total Charges (High to Low)</option>
+            <option value="totalCharges-asc">Total Charges (Low to High)</option>
             <option value="exporter-asc">Exporter (A-Z)</option>
             <option value="lotid-asc">Lot ID (A-Z)</option>
           </select>
@@ -2727,10 +2243,10 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
                 Cost/Box {sortBy === 'costPerBox' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
               <th 
-                onClick={() => handleSort('totalChargeAmount')}
+                onClick={() => handleSort('totalCharges')}
                 className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
               >
-                Total Charges {sortBy === 'totalChargeAmount' && (sortOrder === 'asc' ? '↑' : '↓')}
+                Total Charges {sortBy === 'totalCharges' && (sortOrder === 'asc' ? '↑' : '↓')}
               </th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Action
@@ -2743,7 +2259,7 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
                 <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{lot.lotid}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lot.exporter}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{formatPrice(lot.costPerBox)}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">${(lot.totalChargeAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{formatPrice(lot.totalCharges || 0)}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm">
                   <button
                     onClick={() => handleLotClick(lot)}
@@ -2807,9 +2323,8 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
                   <h4 className="font-semibold mb-2">Lot Information</h4>
                   <div className="space-y-2 text-sm">
                     <div><strong>Exporter:</strong> {selectedLot.lot.exporter}</div>
-                    <div><strong>Total Boxes:</strong> {(selectedLot.lot.totalBoxes || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
                     <div><strong>Cost per Box:</strong> {formatPrice(selectedLot.lot.costPerBox)}</div>
-                    <div><strong>Total Charges:</strong> ${(selectedLot.lot.totalChargeAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+                    <div><strong>Total Charges:</strong> {formatPrice(selectedLot.lot.totalCharges || 0)}</div>
                     <div><strong>Charge Records:</strong> {selectedLot.charges.length}</div>
                   </div>
                 </div>
@@ -2865,9 +2380,9 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
                       {selectedLot.chargeComparisons.map((comp, index) => (
                         <tr key={comp.type} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                           <td className="px-3 py-2 font-medium">{comp.type}</td>
-                          <td className="px-3 py-2 text-right">${(comp.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                          <td className="px-3 py-2 text-right">{formatPrice(comp.amount)}</td>
                           <td className="px-3 py-2 text-right">{comp.count}</td>
-                          <td className="px-3 py-2 text-right">${(comp.exporterAvg || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                          <td className="px-3 py-2 text-right">{formatPrice(comp.exporterAvg)}</td>
                           <td className="px-3 py-2 text-right">
                             <span className={`font-medium ${
                               Math.abs(comp.deviationFromExporter) > 30 ? 'text-red-600' : 
@@ -2876,7 +2391,7 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
                               {comp.deviationFromExporter > 0 ? '+' : ''}{comp.deviationFromExporter.toFixed(1)}%
                             </span>
                           </td>
-                          <td className="px-3 py-2 text-right">${(comp.globalAvg || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                          <td className="px-3 py-2 text-right">{formatPrice(comp.globalAvg)}</td>
                           <td className="px-3 py-2 text-right">
                             <span className={`font-medium ${
                               Math.abs(comp.deviationFromGlobal) > 30 ? 'text-red-600' : 
@@ -3462,52 +2977,20 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
     const loadData = async () => {
       try {
         setLoading(true);
-        console.log('📊 Loading cost data from embedded data...');
+        console.log('📊 Loading cost data...');
         
-        // Clear cache to ensure fresh data
-        clearEmbeddedDataCache();
-        console.log('🧹 Cleared embedded data cache');
-        
-        console.log('🔍 Testing data access...');
-        
-        // Test basic data access first
-        console.log('📋 Testing calculateMetricsFromEmbedded function...');
-        const metricsTest = await calculateMetricsFromEmbedded();
-        console.log('✅ Metrics test result:', Object.keys(metricsTest).length, 'lots');
-        
-        const [metricsData, chargeDataCSV, dataSummary] = await Promise.all([
+        const [metricsData, chargeDataCSV] = await Promise.all([
           calculateMetricsFromEmbedded(),
-          getChargeDataFromEmbedded(),
-          getDataSummaryFromEmbedded()
+          getChargeDataFromEmbedded()
         ]);
-        
-        console.log('📈 Raw metrics data:', metricsData);
-        console.log('📋 Raw charge data length:', chargeDataCSV?.length);
-        console.log('📊 Data summary:', dataSummary);
         
         setMetrics(metricsData);
         setChargeData(chargeDataCSV);
-        
-        // Debug: Check exporters in final state
-        const finalExporters = [...new Set(Object.values(metricsData).map(m => m.exporter))].filter(Boolean);
-        console.log('🔍 FINAL EXPORTERS IN COMPONENT STATE:', finalExporters);
-        
-        const excludedExporters = ['Del Monte', 'VIDEXPORT', 'Videxport'];
-        const foundExcluded = finalExporters.filter(exp => excludedExporters.includes(exp));
-        if (foundExcluded.length > 0) {
-          console.error('❌ EXCLUDED EXPORTERS FOUND IN COMPONENT STATE:', foundExcluded);
-        } else {
-          console.log('✅ Component state clean - no excluded exporters');
-        }
-        
-        console.log('📈 Cost Consistency Report loaded from embedded data');
-        console.log(`📊 Analyzing ${Object.keys(metricsData).length} lot IDs`);
-        console.log('🔍 Final data summary:', dataSummary);
-        
         setLoading(false);
+        
+        console.log(`✅ Loaded ${Object.keys(metricsData).length} lots`);
       } catch (err) {
         console.error('❌ Error loading cost data:', err);
-        console.error('❌ Error stack:', err.stack);
         setError(err.message);
         setLoading(false);
       }
@@ -3626,7 +3109,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
 
   return (
     <div className="min-h-screen bg-[#F9F6F4] w-full m-0 p-0">
-      <div className="p-6 space-y-16 w-full max-w-none m-0 pt-8">{/* pt-8 reducido ya que el Header ahora es visible */}
+      <div className="p-6 space-y-16 w-full max-w-none m-0">
         <h1 className="text-5xl font-extrabold text-center mb-8 text-[#EE6C4D]">Cost Consistency Report</h1>
         
         {/* 1. KPIs */}
