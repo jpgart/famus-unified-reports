@@ -144,17 +144,13 @@ const KPISection = ({
       {/* KPI Cards */}
       {kpis.length > 0 && (
         <div className="w-full max-w-7xl mx-auto mb-8 px-2 sm:px-4">
-          {/* Adaptive grid based on number of KPIs */}
+          {/* Grid with maximum 3 columns - responsive design */}
           <div className={`grid gap-4 md:gap-6 mb-6 ${
             kpis.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
             kpis.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto' :
-            kpis.length === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' :
-            kpis.length === 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
-            kpis.length === 5 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5' :
-            kpis.length === 6 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6' :
-            'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+            'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto'
           }`}>
-            {kpis.slice(0, kpis.length <= 6 ? kpis.length : 6).map((kpi, idx) => (
+            {kpis.map((kpi, idx) => (
               <KPICard
                 key={idx}
                 title={kpi.label || kpi.title}
@@ -166,21 +162,6 @@ const KPISection = ({
               />
             ))}
           </div>
-          {kpis.length > 6 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 md:gap-6">
-              {kpis.slice(6).map((kpi, idx) => (
-                <KPICard
-                  key={idx + 6}
-                  title={kpi.label || kpi.title}
-                  value={kpi.value}
-                  type={kpi.type || 'number'}
-                  change={kpi.change}
-                  changeType={kpi.changeType}
-                  size={kpi.size || 'normal'}
-                />
-              ))}
-            </div>
-          )}
         </div>
       )}
 

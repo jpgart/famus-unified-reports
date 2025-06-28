@@ -171,8 +171,8 @@ export const KPICards = React.memo(({ metrics }) => {
         </select>
       </div>
 
-      {/* KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* KPI Grid - Maximum 3 columns for better visual distribution */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {kpiCards.map((kpi, index) => (
           <div key={index} className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-l-famus-orange">
             <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">{kpi.title}</h3>

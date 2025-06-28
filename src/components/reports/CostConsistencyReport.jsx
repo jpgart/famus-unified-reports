@@ -1266,8 +1266,8 @@ const OutlierAnalysis = ({ metrics }) => {
 
   return (
     <div className="bg-[#F9F6F4] rounded-2xl p-6 shadow-md">
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      {/* Stats Summary - Maximum 3 columns for better distribution */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 max-w-6xl mx-auto">
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="text-sm text-gray-600">Outliers Found</div>
           <div className="text-2xl font-bold text-[#EE6C4D]">{outlierAnalysis.stats.outlierCount}</div>
@@ -2849,8 +2849,8 @@ const ComprehensiveSummaryTable = ({ metrics }) => {
         Resumen Integral: Cargos vs Stock Inicial por Exportador
       </h3>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      {/* Summary Cards - Maximum 3 columns for better distribution */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 max-w-6xl mx-auto">
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="text-sm text-gray-600">Total Cargos</div>
           <div className="text-xl font-bold text-[#EE6C4D]">{formatPrice(totals.totalCharges)}</div>
