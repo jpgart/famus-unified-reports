@@ -12,7 +12,7 @@ import InventoryReport from './src/components/reports/InventoryReport';
 function App() {
   const [activeReport, setActiveReport] = useState('sales');
   const [sectionRefs, setSectionRefs] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Cambiar a false para debugging
   const [error, setError] = useState(null);
 
   // Performance monitoring
