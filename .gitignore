@@ -11,7 +11,7 @@ package-lock.json.bak
 .pnpm-debug.log*
 
 # Production builds
-dist/
+# dist/ - Commented out for GitHub Pages deployment
 build/
 out/
 
