@@ -148,19 +148,16 @@ const InventoryReport = ({ onRefsUpdate }) => {
 
   return (
     <div className="min-h-screen bg-[#F9F6F4] w-full m-0 p-0">
-      <div className="space-y-8 p-6 pt-8">{/* pt-8 reducido ya que el Header ahora es visible */}
+      <div className="p-6 space-y-16 w-full max-w-none m-0">
+        <h1 className="report-title">Inventory Report</h1>
+        
         {/* Main Content */}
-        <div ref={sectionRefs['Initial Stock']} className="bg-[#F9F6F4] rounded-2xl p-6 shadow-md">
-          {/* Header dentro del contenido principal */}
-          <div className="text-center mb-8">
-            <h1 className="report-title">Inventory Report</h1>
-            <p className="text-lg text-gray-600 max-w-4xl mx-auto">
-              Comprehensive analysis of initial stock levels, distribution, and inventory composition across exporters and varieties.
-            </p>
-          </div>
-        <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">
-          Initial Stock Analysis
-        </h2>
+        <div ref={sectionRefs['Initial Stock']}>
+          <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">
+            Initial Stock Analysis
+          </h2>
+          <p className="text-gray-600 mb-4 text-sm">Comprehensive analysis of initial stock levels, distribution, and inventory composition across exporters and varieties.</p>
+          <p className="text-gray-600 text-sm mb-6 italic">Key Performance Indicators showing overall inventory metrics, stock levels, and distribution statistics across all exporters and varieties.</p>
 
         {/* Stock Summary KPI Cards */}
         <KPISection

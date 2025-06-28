@@ -149,8 +149,11 @@ body {
   color: var(--famus-orange);
   margin-bottom: 2rem; /* mb-8 equivalent */
   margin-top: 0;
-  padding-top: 2rem; /* pt-8 equivalent - consistent top spacing */
+  padding-top: 3rem; /* Increased from 2rem for more consistent spacing */
   line-height: 1.1;
+  /* Force consistent positioning regardless of parent container */
+  position: relative;
+  z-index: 1;
 }
 
 /* Responsive adjustments for report titles */
