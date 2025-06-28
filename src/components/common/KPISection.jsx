@@ -38,6 +38,37 @@ const KPISection = ({
   showChart = true,
   containerClass = ""
 }) => {
+  // Function to calculate optimal grid layout based on KPI count
+  const getGridClasses = (count) => {
+    if (count === 1) {
+      return 'grid-cols-1 max-w-md mx-auto';
+    } else if (count === 2) {
+      return 'grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto';
+    } else if (count === 3) {
+      return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto';
+    } else if (count === 4) {
+      // 4 KPIs: 2 rows of 2 each - optimal distribution
+      return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 max-w-4xl mx-auto';
+    } else if (count === 5) {
+      // 5 KPIs: 2 rows (3+2) - first row 3, second row 2
+      return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto';
+    } else if (count === 6) {
+      // 6 KPIs: 2 rows of 3 each - perfect distribution
+      return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto';
+    } else if (count === 7) {
+      // 7 KPIs: 3 rows (3+3+1) - 3 cols max
+      return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto';
+    } else if (count === 8) {
+      // 8 KPIs: 3 rows (3+3+2) - 3 cols max
+      return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto';
+    } else if (count === 9) {
+      // 9 KPIs: 3 rows of 3 each - perfect 3 cols
+      return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto';
+    } else {
+      // More than 9: Always 3 cols max, multiple rows
+      return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto';
+    }
+  };
   const defaultChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -144,12 +175,8 @@ const KPISection = ({
       {/* KPI Cards */}
       {kpis.length > 0 && (
         <div className="w-full max-w-7xl mx-auto mb-8 px-2 sm:px-4">
-          {/* Grid with maximum 3 columns - responsive design */}
-          <div className={`grid gap-4 md:gap-6 mb-6 ${
-            kpis.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
-            kpis.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto' :
-            'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto'
-          }`}>
+          {/* Grid with optimal distribution - maximum 3 columns */}
+          <div className={`grid gap-4 md:gap-6 mb-6 ${getGridClasses(kpis.length)}`}>
             {kpis.map((kpi, idx) => (
               <KPICard
                 key={idx}

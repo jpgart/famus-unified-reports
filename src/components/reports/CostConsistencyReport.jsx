@@ -1683,7 +1683,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
       {/* Issues by Exporter Summary */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <h4 className="text-sm font-semibold text-blue-800 mb-3">📊 Issues by Exporter (Top 10)</h4>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs max-w-6xl mx-auto">
           {issuesByExporter.map(([exporter, count]) => (
             <div key={exporter} className="bg-white p-2 rounded border">
               <div className="font-medium text-gray-700 truncate" title={exporter}>{exporter}</div>
