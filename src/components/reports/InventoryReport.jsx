@@ -153,7 +153,7 @@ const InventoryReport = ({ onRefsUpdate }) => {
         <div ref={sectionRefs['Initial Stock']} className="bg-[#F9F6F4] rounded-2xl p-6 shadow-md">
           {/* Header dentro del contenido principal */}
           <div className="text-center mb-8">
-            <h1 className="text-5xl font-extrabold text-center mb-8 text-[#EE6C4D]">Inventory Report</h1>
+            <h1 className="report-title">Inventory Report</h1>
             <p className="text-lg text-gray-600 max-w-4xl mx-auto">
               Comprehensive analysis of initial stock levels, distribution, and inventory composition across exporters and varieties.
             </p>

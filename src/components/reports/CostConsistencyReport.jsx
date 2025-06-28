@@ -3110,7 +3110,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
   return (
     <div className="min-h-screen bg-[#F9F6F4] w-full m-0 p-0">
       <div className="p-6 space-y-16 w-full max-w-none m-0">
-        <h1 className="text-5xl font-extrabold text-center mb-8 text-[#EE6C4D]">Cost Consistency Report</h1>
+        <h1 className="report-title">Cost Consistency Report</h1>
         
         {/* 1. KPIs */}
         <div ref={refs['KPIs']}>

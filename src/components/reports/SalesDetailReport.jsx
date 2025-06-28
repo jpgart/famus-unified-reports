@@ -1960,6 +1960,14 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
 
   // Create dynamic chart options for this component instance
   const chartOptions = useMemo(() => getDynamicChartOptions(isMobile), [isMobile]);
+  
+  // Create chart options without zoom for Filtered Sales Analysis
+  const chartOptionsNoZoom = useMemo(() => {
+    const options = getDynamicChartOptions(isMobile);
+    // Remove zoom functionality
+    delete options.plugins.zoom;
+    return options;
+  }, [isMobile]);
 
   // Load data automatically on initialization
   useEffect(() => {
@@ -2012,8 +2020,8 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
 
   return (
     <div className="min-h-screen bg-[#F9F6F4] w-full m-0 p-0">
-      <div className="p-6 space-y-16 w-full max-w-none m-0 pt-8">{/* pt-8 reducido ya que el Header ahora es visible */}
-        <h1 className="text-5xl font-extrabold text-center mb-8 text-[#EE6C4D]">Sales Detail Report</h1>
+      <div className="p-6 space-y-16 w-full max-w-none m-0">{/* Removed pt-8 since consistent spacing is now in CSS */}
+        <h1 className="report-title">Sales Detail Report</h1>
         
         {/* 1. KPIs */}
         <div ref={refs['KPIs']}>
@@ -2139,7 +2147,7 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
                 {sizes.map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
-            <Bar data={getChartData(filtered, 'Retailer Name', 'Sale Quantity', 'Price Four Star')} options={chartOptions} />
+            <Bar data={getChartData(filtered, 'Retailer Name', 'Sale Quantity', 'Price Four Star')} options={chartOptionsNoZoom} />
             <SortableTable data={filtered} />
             <div className="w-[420px] mx-auto my-4">
               <Pie data={getPieData(filtered, 'Retailer Name', 'Sales Amount')} options={{ plugins: { legend: { position: 'bottom' }, datalabels: { display: true } }, aspectRatio: 1 }} />

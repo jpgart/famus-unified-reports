@@ -141,6 +141,34 @@ body {
   @apply bg-white text-famus-navy hover:bg-famus-blue hover:text-white;
 }
 
+/* Report Title Consistency */
+.report-title {
+  text-align: center;
+  font-size: 3rem; /* text-5xl equivalent */
+  font-weight: 800; /* font-extrabold equivalent */
+  color: var(--famus-orange);
+  margin-bottom: 2rem; /* mb-8 equivalent */
+  margin-top: 0;
+  padding-top: 2rem; /* pt-8 equivalent - consistent top spacing */
+  line-height: 1.1;
+}
+
+/* Responsive adjustments for report titles */
+@media (max-width: 768px) {
+  .report-title {
+    font-size: 2.25rem; /* Smaller on mobile */
+    padding-top: 1rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .report-title {
+    font-size: 1.875rem; /* Even smaller on very small screens */
+    line-height: 1.2;
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .chart-container {

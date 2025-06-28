@@ -562,7 +562,7 @@ const ProfitabilityReport = ({ onRefsUpdate }) => {
       <div ref={sectionRefs['KPIs']} id="KPIs">
         {/* Header dentro del contenido principal */}
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-extrabold text-center mb-8 text-[#EE6C4D]">Profitability Analysis Report</h1>
+          <h1 className="report-title">Profitability Analysis Report</h1>
           <p className="text-lg text-gray-600 max-w-4xl mx-auto">
             Comprehensive profitability analysis combining sales revenue and operational costs to identify the most and least profitable lots, varieties, and exporters.
           </p>
