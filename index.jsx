@@ -3,76 +3,53 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-// Famus Unified Reports - Entry Point
-// Updated: 2025-06-27
-// Version: 3.0 - Production Ready with Enhanced Error Handling
+// DEBUGGING: Log immediately when script starts
+console.log('🚀 INDEX.JSX: Script started - ', new Date().toISOString());
 
-// Performance monitoring
-const startTime = performance.now();
-
-// Global error handler for unhandled errors
-window.addEventListener('error', (event) => {
-  console.error('Global error:', event.error);
-  // In production, you might want to send this to an error reporting service
-});
-
-// Global error handler for unhandled promise rejections
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
-  event.preventDefault(); // Prevent the default browser behavior
-});
-
+// Immediately show debug info in DOM
 const container = document.getElementById('root');
-
-if (!container) {
-  throw new Error('Root container not found. Make sure your HTML has a div with id="root"');
-}
-
-const root = createRoot(container);
-
-// Enhanced error boundary for production
-try {
-  root.render(<App />);
+if (container) {
+  console.log('✅ ROOT: Container found');
   
-  // Log successful render time for performance monitoring
-  const renderTime = performance.now() - startTime;
-  console.log(`App rendered successfully in ${renderTime.toFixed(2)}ms`);
-  
-} catch (error) {
-  console.error('Failed to render app:', error);
-  
-  // Fallback UI for critical failures
-  root.render(
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100vh',
-      fontFamily: 'Inter, sans-serif',
-      textAlign: 'center',
-      padding: '2rem'
-    }}>
-      <h1 style={{ color: '#EE6C4D', marginBottom: '1rem' }}>
-        Famus Reports - Error de Carga
-      </h1>
-      <p style={{ color: '#3D5A80', marginBottom: '1rem' }}>
-        Ha ocurrido un error al cargar la aplicación. Por favor, recarga la página.
-      </p>
-      <button 
-        onClick={() => window.location.reload()}
-        style={{
-          backgroundColor: '#EE6C4D',
-          color: 'white',
-          border: 'none',
-          padding: '0.75rem 1.5rem',
-          borderRadius: '0.5rem',
-          cursor: 'pointer',
-          fontSize: '1rem'
-        }}
-      >
-        Recargar Página
-      </button>
+  // Immediately replace loading message with debug info
+  container.innerHTML = `
+    <div style="min-height: 100vh; background-color: #F9F6F4; display: flex; align-items: center; justify-content: center; font-family: Inter, sans-serif; padding: 20px; text-align: center;">
+      <div>
+        <h1 style="color: #EE6C4D; margin-bottom: 1rem; font-size: 2rem;">⚡ Script Loaded!</h1>
+        <p style="color: #3D5A80; margin-bottom: 1rem; font-size: 1.2rem;">JavaScript se está ejecutando correctamente</p>
+        <p style="color: #64748B; font-size: 1rem;">Timestamp: ${new Date().toLocaleTimeString()}</p>
+        <div style="background-color: #98C1D9; color: white; padding: 15px; border-radius: 8px; margin-top: 20px; display: inline-block;">
+          Preparando React...
+        </div>
+      </div>
     </div>
-  );
+  `;
+  
+  // Give immediate visual feedback, then try React
+  setTimeout(() => {
+    try {
+      console.log('🔧 REACT: Creating root...');
+      const root = createRoot(container);
+      
+      console.log('🎨 REACT: Rendering App...');
+      root.render(<App />);
+      
+      console.log('🎉 REACT: App rendered successfully!');
+    } catch (error) {
+      console.error('💥 REACT: Failed to render:', error);
+      
+      container.innerHTML = `
+        <div style="min-height: 100vh; background-color: #F9F6F4; display: flex; align-items: center; justify-content: center; font-family: Inter, sans-serif; padding: 20px; text-align: center;">
+          <div>
+            <h1 style="color: #F44336; margin-bottom: 1rem; font-size: 2rem;">❌ Error React</h1>
+            <p style="color: #3D5A80; margin-bottom: 1rem; font-size: 1.2rem;">Error al cargar React: ${error.message}</p>
+            <p style="color: #64748B; font-size: 1rem;">Ver consola para más detalles</p>
+          </div>
+        </div>
+      `;
+    }
+  }, 100);
+  
+} else {
+  console.error('❌ ROOT: Container not found!');
 }

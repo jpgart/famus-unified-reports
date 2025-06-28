@@ -3,7 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  entry: './debug.jsx', // Cambio temporal para debugging
+  entry: './index.jsx', // Volver al entry point original
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].[contenthash].js',
