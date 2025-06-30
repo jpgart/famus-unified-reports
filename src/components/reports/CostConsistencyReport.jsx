@@ -1863,6 +1863,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
     lots.forEach(lot => {
       // Get exporter info for the issue
       const exporter = lot.exporter || 'Unknown';
+      let hasIssue = false;
       
       // Check for missing critical data
       if (!lot.exporter || lot.exporter === '') {
@@ -1875,6 +1876,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
           costPerBox: lot.costPerBox,
           totalCharges: lot.totalChargeAmount || 0
         });
+        hasIssue = true;
       }
       
       // Check for inconsistent cost calculations
@@ -1888,6 +1890,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
           costPerBox: lot.costPerBox,
           totalCharges: lot.totalChargeAmount || 0
         });
+        hasIssue = true;
       }
       
       // Check for outlier costs (> 3 standard deviations)
@@ -1906,6 +1909,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
             costPerBox: lot.costPerBox,
             totalCharges: lot.totalChargeAmount || 0
           });
+          hasIssue = true;
         }
       }
 
@@ -1920,6 +1924,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
           costPerBox: lot.costPerBox,
           totalCharges: lot.totalChargeAmount || 0
         });
+        hasIssue = true;
       }
       
       // Check for missing total charges (when cost per box is also null/zero)
@@ -1930,6 +1935,20 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
           type: 'Missing Charges',
           severity: 'Medium',
           description: 'No charge data found for this lot',
+          costPerBox: lot.costPerBox,
+          totalCharges: lot.totalChargeAmount || 0
+        });
+        hasIssue = true;
+      }
+      
+      // If no issues found, add as "Consistent" with Low severity to show all lots are being reviewed
+      if (!hasIssue) {
+        issues.push({
+          lotId: lot.lotid,
+          exporter: exporter,
+          type: 'Consistent',
+          severity: 'Low',
+          description: `Data is consistent - Cost per box: ${formatPrice(lot.costPerBox || 0)}, Total charges: ${formatPrice(lot.totalChargeAmount || 0)}`,
           costPerBox: lot.costPerBox,
           totalCharges: lot.totalChargeAmount || 0
         });
@@ -2004,6 +2023,35 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
+      {/* Summary Statistics */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200">
+        <h4 className="font-semibold text-blue-800 mb-3 flex items-center">
+          <span className="mr-2">📊</span>
+          Consistency Review Summary
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">{Object.keys(metrics).length}</div>
+            <div className="text-gray-600">Total Lots Reviewed</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-600">{consistencyData.filter(i => i.severity === 'Low').length}</div>
+            <div className="text-gray-600">Consistent Lots</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-orange-600">{consistencyData.filter(i => i.severity === 'Medium').length}</div>
+            <div className="text-gray-600">Medium Issues</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-red-600">{consistencyData.filter(i => i.severity === 'High').length}</div>
+            <div className="text-gray-600">High Issues</div>
+          </div>
+        </div>
+        <div className="mt-3 text-xs text-blue-700 text-center">
+          ✅ This analysis reviews every single Lot ID in the system to ensure comprehensive data validation
+        </div>
+      </div>
+
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-800">Internal Consistency Issues</h3>
         <div className="text-sm text-gray-600">
@@ -3494,8 +3542,8 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
         {/* 8. Internal Consistency Analysis */}
         <div ref={refs['Internal Consistency']}>
           <h2 className="text-2xl font-bold text-[#EE6C4D] mb-2">Internal Consistency Analysis</h2>
-          <p className="text-gray-600 mb-4 text-sm">Analysis of data consistency within individual records, identifying discrepancies and validation issues in internal calculations.</p>
-          <p className="text-gray-600 text-sm mb-6 italic">Internal data validation and consistency checks to ensure accurate cost calculations and reporting.</p>
+          <p className="text-gray-600 mb-4 text-sm">Comprehensive review of ALL lot IDs in the system, analyzing data consistency within individual records. Shows all lots with their consistency status, identifying discrepancies and validation issues.</p>
+          <p className="text-gray-600 text-sm mb-6 italic">Complete internal data validation checking every lot - consistent lots are marked as "Low" severity to demonstrate comprehensive system review.</p>
           <InternalConsistencyAnalysis 
             metrics={metrics}
             chargeData={chargeData}
