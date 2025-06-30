@@ -635,38 +635,150 @@ const OceanFreightAnalysis = () => {
     }
   };
 
-  // Function to detect inconsistencies in Ocean Freight costs
+  // Function to detect inconsistencies in Ocean Freight costs by Lotid
   const detectInconsistencies = () => {
     if (!freightData || !freightData.byExporter) return [];
     
     const avgFreight = freightData.summary?.avgPerBox || 0;
     const inconsistencies = [];
     
-    // Convert byExporter object to array
-    const exportersArray = Object.values(freightData.byExporter);
-    
-    exportersArray.forEach(exporter => {
-      const deviation = Math.abs(exporter.avgPerBox - avgFreight);
-      const percentageDeviation = avgFreight > 0 ? (deviation / avgFreight) * 100 : 0;
-      
-      // Show all deviations >= 10% (Medium and High)
-      if (percentageDeviation >= 10) {
-        const category = categorizeDeviation(percentageDeviation);
-        inconsistencies.push({
-          exporter: exporter.exporter,
-          cost: exporter.avgPerBox,
-          deviation: percentageDeviation,
-          type: exporter.avgPerBox > avgFreight ? 'High' : 'Low',
-          flag: category.flag,
-          severity: category.severity,
-          level: category.level,
-          color: category.color
-        });
+    // We need to access individual lots data - let's use the raw data analysis
+    // First, let's check if we have access to individual lot data
+    const loadIndividualLotAnalysis = async () => {
+      try {
+        // Re-analyze to get individual lot data
+        const rawData = await analyzeSpecificChargeFromEmbedded('OCEAN FREIGHT', 'Ocean Freight');
+        
+        if (rawData && rawData.analysis && rawData.summary) {
+          const avgCostPerBox = rawData.summary.avgPerBox || 0;
+          
+          // Get all lots data by re-processing
+          const embeddedData = await getChargeDataFromEmbedded();
+          const oceanFreightData = embeddedData.filter(row => 
+            row.Chargedescr === 'OCEAN FREIGHT' && row.Chgamt > 0
+          );
+          
+          // Group by lotid to get individual lot costs
+          const lotData = {};
+          oceanFreightData.forEach(row => {
+            const lotid = row.Lotid;
+            if (!lotData[lotid]) {
+              lotData[lotid] = {
+                lotid,
+                exporter: row['Exporter Clean'],
+                totalCharge: 0,
+                initialStock: row['Initial Stock'] || 0
+              };
+            }
+            lotData[lotid].totalCharge += row.Chgamt;
+          });
+          
+          // Calculate cost per box for each lot and check deviations
+          Object.values(lotData).forEach(lot => {
+            const costPerBox = lot.initialStock > 0 ? lot.totalCharge / lot.initialStock : 0;
+            if (costPerBox > 0) {
+              const deviation = Math.abs(costPerBox - avgCostPerBox);
+              const percentageDeviation = avgCostPerBox > 0 ? (deviation / avgCostPerBox) * 100 : 0;
+              
+              // Show all deviations >= 10% (Medium and High)
+              if (percentageDeviation >= 10) {
+                const category = categorizeDeviation(percentageDeviation);
+                inconsistencies.push({
+                  lotid: lot.lotid,
+                  exporter: lot.exporter,
+                  cost: costPerBox,
+                  totalCharge: lot.totalCharge,
+                  boxes: lot.initialStock,
+                  deviation: percentageDeviation,
+                  type: costPerBox > avgCostPerBox ? 'High' : 'Low',
+                  flag: category.flag,
+                  severity: category.severity,
+                  level: category.level,
+                  color: category.color
+                });
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error loading individual lot analysis:', error);
       }
-    });
+      
+      return inconsistencies.sort((a, b) => b.deviation - a.deviation);
+    };
     
-    return inconsistencies.sort((a, b) => b.deviation - a.deviation);
+    // For now, return empty array and trigger the async load
+    // This will be populated when the component re-renders with the data
+    return [];
   };
+
+  // State for individual lot inconsistencies
+  const [lotInconsistencies, setLotInconsistencies] = useState([]);
+  
+  // Load individual lot inconsistencies
+  useEffect(() => {
+    const loadLotInconsistencies = async () => {
+      if (!freightData) return;
+      
+      try {
+        const avgCostPerBox = freightData.summary?.avgPerBox || 0;
+        const embeddedData = await getChargeDataFromEmbedded();
+        const oceanFreightData = embeddedData.filter(row => 
+          row.Chargedescr === 'OCEAN FREIGHT' && row.Chgamt > 0
+        );
+        
+        // Group by lotid to get individual lot costs
+        const lotData = {};
+        oceanFreightData.forEach(row => {
+          const lotid = row.Lotid;
+          if (!lotData[lotid]) {
+            lotData[lotid] = {
+              lotid,
+              exporter: row['Exporter Clean'],
+              totalCharge: 0,
+              initialStock: row['Initial Stock'] || 0
+            };
+          }
+          lotData[lotid].totalCharge += row.Chgamt;
+        });
+        
+        // Calculate cost per box for each lot and check deviations
+        const inconsistencies = [];
+        Object.values(lotData).forEach(lot => {
+          const costPerBox = lot.initialStock > 0 ? lot.totalCharge / lot.initialStock : 0;
+          if (costPerBox > 0) {
+            const deviation = Math.abs(costPerBox - avgCostPerBox);
+            const percentageDeviation = avgCostPerBox > 0 ? (deviation / avgCostPerBox) * 100 : 0;
+            
+            // Show all deviations >= 10% (Medium and High)
+            if (percentageDeviation >= 10) {
+              const category = categorizeDeviation(percentageDeviation);
+              inconsistencies.push({
+                lotid: lot.lotid,
+                exporter: lot.exporter,
+                cost: costPerBox,
+                totalCharge: lot.totalCharge,
+                boxes: lot.initialStock,
+                deviation: percentageDeviation,
+                type: costPerBox > avgCostPerBox ? 'High' : 'Low',
+                flag: category.flag,
+                severity: category.severity,
+                level: category.level,
+                color: category.color
+              });
+            }
+          }
+        });
+        
+        setLotInconsistencies(inconsistencies.sort((a, b) => b.deviation - a.deviation));
+      } catch (error) {
+        console.error('Error loading lot inconsistencies:', error);
+        setLotInconsistencies([]);
+      }
+    };
+    
+    loadLotInconsistencies();
+  }, [freightData]);
 
   if (loading) {
     return (
@@ -778,15 +890,18 @@ const OceanFreightAnalysis = () => {
       </div>
 
       {/* Inconsistency Detection Table */}
-      {inconsistencies.length > 0 && (
+      {lotInconsistencies.length > 0 && (
         <div className="mb-6">
-          <h5 className="text-md font-semibold text-[#EE6C4D] mb-3">🔍 Detected Cost Inconsistencies</h5>
+          <h5 className="text-md font-semibold text-[#EE6C4D] mb-3">🔍 Detected Cost Inconsistencies by Lotid</h5>
           <div className="bg-white rounded-lg overflow-hidden shadow-sm border">
             <table className="w-full text-sm">
               <thead className="bg-[#3D5A80] text-white">
                 <tr>
                   <th className="p-3 text-left">Flag</th>
+                  <th className="p-3 text-left">Lotid</th>
                   <th className="p-3 text-left">Exporter</th>
+                  <th className="p-3 text-right">Total Charge</th>
+                  <th className="p-3 text-right">Boxes</th>
                   <th className="p-3 text-right">Cost/Box</th>
                   <th className="p-3 text-right">Deviation</th>
                   <th className="p-3 text-center">Analysis Level</th>
@@ -794,10 +909,13 @@ const OceanFreightAnalysis = () => {
                 </tr>
               </thead>
               <tbody>
-                {inconsistencies.map((item, index) => (
+                {lotInconsistencies.map((item, index) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-[#E8F4F8]' : 'bg-white'}>
                     <td className="p-3 text-center text-lg">{item.flag}</td>
-                    <td className="p-3 font-medium text-[#3D5A80]">{item.exporter}</td>
+                    <td className="p-3 font-medium text-[#3D5A80]">{item.lotid}</td>
+                    <td className="p-3 text-gray-700">{item.exporter}</td>
+                    <td className="p-3 text-right">${item.totalCharge.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                    <td className="p-3 text-right">{item.boxes.toLocaleString()}</td>
                     <td className="p-3 text-right font-semibold">{formatPrice(item.cost)}</td>
                     <td className={`p-3 text-right font-bold ${item.color}`}>{item.deviation.toFixed(1)}%</td>
                     <td className={`p-3 text-center font-semibold ${item.color}`}>{item.level}</td>
@@ -813,6 +931,17 @@ const OceanFreightAnalysis = () => {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Summary if no inconsistencies */}
+      {lotInconsistencies.length === 0 && freightData && (
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <span className="text-green-600 text-lg mr-2">✅</span>
+            <span className="text-green-800 font-semibold">No significant cost inconsistencies detected</span>
+          </div>
+          <p className="text-green-700 text-sm mt-1">All Ocean Freight costs are within normal deviation range (&lt; 10%)</p>
         </div>
       )}
 
@@ -875,6 +1004,7 @@ const OceanFreightAnalysis = () => {
 const RepackingAnalysis = () => {
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [lotInconsistencies, setLotInconsistencies] = useState([]);
 
   // Using the combined repacking analysis function
   const displayName = "Repacking";
@@ -895,6 +1025,74 @@ const RepackingAnalysis = () => {
 
     loadAnalysis();
   }, [displayName]);
+
+  // Load individual lot inconsistencies for repacking
+  useEffect(() => {
+    const loadLotInconsistencies = async () => {
+      if (!analysisData) return;
+      
+      try {
+        const avgCostPerBox = analysisData.summary?.avgPerBox || 0;
+        const embeddedData = await getChargeDataFromEmbedded();
+        
+        // Filter for both PACKING MATERIALS and REPACKING CHARGES
+        const repackingData = embeddedData.filter(row => 
+          (row.Chargedescr === 'PACKING MATERIALS' || row.Chargedescr === 'REPACKING CHARGES') && 
+          row.Chgamt > 0
+        );
+        
+        // Group by lotid to get individual lot costs
+        const lotData = {};
+        repackingData.forEach(row => {
+          const lotid = row.Lotid;
+          if (!lotData[lotid]) {
+            lotData[lotid] = {
+              lotid,
+              exporter: row['Exporter Clean'],
+              totalCharge: 0,
+              initialStock: row['Initial Stock'] || 0
+            };
+          }
+          lotData[lotid].totalCharge += row.Chgamt;
+        });
+        
+        // Calculate cost per box for each lot and check deviations
+        const inconsistencies = [];
+        Object.values(lotData).forEach(lot => {
+          const costPerBox = lot.initialStock > 0 ? lot.totalCharge / lot.initialStock : 0;
+          if (costPerBox > 0) {
+            const deviation = Math.abs(costPerBox - avgCostPerBox);
+            const percentageDeviation = avgCostPerBox > 0 ? (deviation / avgCostPerBox) * 100 : 0;
+            
+            // Show all deviations >= 10% (Medium and High)
+            if (percentageDeviation >= 10) {
+              const category = categorizeDeviation(percentageDeviation);
+              inconsistencies.push({
+                lotid: lot.lotid,
+                exporter: lot.exporter,
+                cost: costPerBox,
+                totalCharge: lot.totalCharge,
+                boxes: lot.initialStock,
+                deviation: percentageDeviation,
+                type: costPerBox > avgCostPerBox ? 'High' : 'Low',
+                flag: category.flag,
+                severity: category.severity,
+                level: category.level,
+                color: category.color
+              });
+            }
+          }
+        });
+        
+        setLotInconsistencies(inconsistencies.sort((a, b) => b.deviation - a.deviation));
+      } catch (error) {
+        console.error('Error loading repacking lot inconsistencies:', error);
+        setLotInconsistencies([]);
+      }
+    };
+    
+    loadLotInconsistencies();
+  }, [analysisData]);
 
   if (loading) {
     return (
@@ -1032,15 +1230,18 @@ const RepackingAnalysis = () => {
       />
 
       {/* Inconsistency Detection Table */}
-      {inconsistencies.length > 0 && (
+      {lotInconsistencies.length > 0 && (
         <div className="mb-6">
-          <h5 className="text-md font-semibold text-[#EE6C4D] mb-3">🔍 Detected Repacking Cost Inconsistencies</h5>
+          <h5 className="text-md font-semibold text-[#EE6C4D] mb-3">🔍 Detected Repacking Cost Inconsistencies by Lotid</h5>
           <div className="bg-white rounded-lg overflow-hidden shadow-sm border">
             <table className="w-full text-sm">
               <thead className="bg-[#3D5A80] text-white">
                 <tr>
                   <th className="p-3 text-left">Flag</th>
+                  <th className="p-3 text-left">Lotid</th>
                   <th className="p-3 text-left">Exporter</th>
+                  <th className="p-3 text-right">Total Charge</th>
+                  <th className="p-3 text-right">Boxes</th>
                   <th className="p-3 text-right">Cost/Box</th>
                   <th className="p-3 text-right">Deviation</th>
                   <th className="p-3 text-center">Analysis Level</th>
@@ -1048,10 +1249,13 @@ const RepackingAnalysis = () => {
                 </tr>
               </thead>
               <tbody>
-                {inconsistencies.map((item, index) => (
+                {lotInconsistencies.map((item, index) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-[#E8F4F8]' : 'bg-white'}>
                     <td className="p-3 text-center text-lg">{item.flag}</td>
-                    <td className="p-3 font-medium text-[#3D5A80]">{item.exporter}</td>
+                    <td className="p-3 font-medium text-[#3D5A80]">{item.lotid}</td>
+                    <td className="p-3 text-gray-700">{item.exporter}</td>
+                    <td className="p-3 text-right">${item.totalCharge.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                    <td className="p-3 text-right">{item.boxes.toLocaleString()}</td>
                     <td className="p-3 text-right font-semibold">{formatPrice(item.cost)}</td>
                     <td className={`p-3 text-right font-bold ${item.color}`}>{item.deviation.toFixed(1)}%</td>
                     <td className={`p-3 text-center font-semibold ${item.color}`}>{item.level}</td>
@@ -1071,7 +1275,7 @@ const RepackingAnalysis = () => {
       )}
 
       {/* Summary if no inconsistencies */}
-      {inconsistencies.length === 0 && (
+      {lotInconsistencies.length === 0 && analysisData && (
         <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center">
             <span className="text-green-600 text-lg mr-2">✅</span>
@@ -1705,8 +1909,21 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
         }
       }
 
-      // Check for missing total charges
-      if (!lot.totalCharges || lot.totalCharges === 0) {
+      // Check for data inconsistency: cost per box exists but no total charges
+      if ((lot.costPerBox !== null && lot.costPerBox > 0) && (!lot.totalCharges || lot.totalCharges === 0)) {
+        issues.push({
+          lotId: lot.lotid,
+          exporter: exporter,
+          type: 'Data Inconsistency',
+          severity: 'High',
+          description: `Cost per box (${formatPrice(lot.costPerBox)}) calculated but no total charges recorded`,
+          costPerBox: lot.costPerBox,
+          totalCharges: lot.totalCharges || 0
+        });
+      }
+      
+      // Check for missing total charges (when cost per box is also null/zero)
+      else if ((!lot.costPerBox || lot.costPerBox === 0) && (!lot.totalCharges || lot.totalCharges === 0)) {
         issues.push({
           lotId: lot.lotid,
           exporter: exporter,
