@@ -1170,7 +1170,7 @@ const Heatmap = ({ data, rowKey, colKey, valueKey, agg, title }) => {
 
       {/* Summary Stats */}
       <div className="mt-4 text-sm text-gray-600 bg-white p-3 rounded-lg">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div>
             <span className="font-semibold">Rows:</span> {rows.length}
           </div>

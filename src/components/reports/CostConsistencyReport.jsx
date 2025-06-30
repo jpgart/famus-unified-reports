@@ -624,6 +624,17 @@ const OceanFreightAnalysis = () => {
     loadFreightAnalysis();
   }, []);
 
+  // Function to categorize deviation levels according to new thresholds
+  const categorizeDeviation = (percentageDeviation) => {
+    if (percentageDeviation < 10) {
+      return { level: 'Normal', severity: 'Low', flag: '🟢', color: 'text-green-600' };
+    } else if (percentageDeviation < 18) {
+      return { level: 'Medium', severity: 'Medium', flag: '🟡', color: 'text-yellow-600' };
+    } else {
+      return { level: 'High', severity: 'High', flag: '🔴', color: 'text-red-600' };
+    }
+  };
+
   // Function to detect inconsistencies in Ocean Freight costs
   const detectInconsistencies = () => {
     if (!freightData || !freightData.byExporter) return [];
@@ -638,13 +649,18 @@ const OceanFreightAnalysis = () => {
       const deviation = Math.abs(exporter.avgPerBox - avgFreight);
       const percentageDeviation = avgFreight > 0 ? (deviation / avgFreight) * 100 : 0;
       
-      if (percentageDeviation > 30) { // More than 30% deviation
+      // Show all deviations >= 10% (Medium and High)
+      if (percentageDeviation >= 10) {
+        const category = categorizeDeviation(percentageDeviation);
         inconsistencies.push({
           exporter: exporter.exporter,
           cost: exporter.avgPerBox,
           deviation: percentageDeviation,
           type: exporter.avgPerBox > avgFreight ? 'High' : 'Low',
-          flag: exporter.avgPerBox > avgFreight ? '🔴' : '🟡'
+          flag: category.flag,
+          severity: category.severity,
+          level: category.level,
+          color: category.color
         });
       }
     });
@@ -773,6 +789,7 @@ const OceanFreightAnalysis = () => {
                   <th className="p-3 text-left">Exporter</th>
                   <th className="p-3 text-right">Cost/Box</th>
                   <th className="p-3 text-right">Deviation</th>
+                  <th className="p-3 text-center">Analysis Level</th>
                   <th className="p-3 text-center">Issue Type</th>
                 </tr>
               </thead>
@@ -782,7 +799,8 @@ const OceanFreightAnalysis = () => {
                     <td className="p-3 text-center text-lg">{item.flag}</td>
                     <td className="p-3 font-medium text-[#3D5A80]">{item.exporter}</td>
                     <td className="p-3 text-right font-semibold">{formatPrice(item.cost)}</td>
-                    <td className="p-3 text-right text-[#EE6C4D]">{item.deviation.toFixed(1)}%</td>
+                    <td className={`p-3 text-right font-bold ${item.color}`}>{item.deviation.toFixed(1)}%</td>
+                    <td className={`p-3 text-center font-semibold ${item.color}`}>{item.level}</td>
                     <td className="p-3 text-center">
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         item.type === 'High' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
@@ -819,21 +837,21 @@ const OceanFreightAnalysis = () => {
                 const avgFreight = freightData.summary?.avgPerBox || 0;
                 const deviation = Math.abs(exporter.avgPerBox - avgFreight);
                 const percentageDeviation = avgFreight > 0 ? (deviation / avgFreight) * 100 : 0;
-                const isInconsistent = percentageDeviation > 30;
+                const category = categorizeDeviation(percentageDeviation);
                 
                 return (
                   <tr key={index} className={index % 2 === 0 ? 'bg-[#E8F4F8]' : 'bg-white'}>
                     <td className="p-3 font-medium text-[#3D5A80]">{exporter.exporter}</td>
                     <td className="p-3 text-right">${exporter.totalAmount?.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0'}</td>
                     <td className="p-3 text-right font-semibold">{formatPrice(exporter.avgPerBox || 0)}</td>
-                    <td className="p-3 text-right">{percentageDeviation.toFixed(1)}%</td>
+                    <td className={`p-3 text-right font-bold ${category.color}`}>{percentageDeviation.toFixed(1)}%</td>
                     <td className="p-3 text-center">
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        isInconsistent ? 
-                          (exporter.avgPerBox > avgFreight ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800') :
-                          'bg-green-100 text-green-800'
+                        category.level === 'Normal' ? 'bg-green-100 text-green-800' :
+                        category.level === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
                       }`}>
-                        {isInconsistent ? 'Review' : 'Normal'}
+                        {category.level} {category.flag}
                       </span>
                     </td>
                   </tr>
@@ -902,6 +920,52 @@ const RepackingAnalysis = () => {
     );
   }
 
+  // Function to categorize deviation levels according to new thresholds
+  const categorizeDeviation = (percentageDeviation) => {
+    if (percentageDeviation < 10) {
+      return { level: 'Normal', severity: 'Low', flag: '🟢', color: 'text-green-600' };
+    } else if (percentageDeviation < 18) {
+      return { level: 'Medium', severity: 'Medium', flag: '🟡', color: 'text-yellow-600' };
+    } else {
+      return { level: 'High', severity: 'High', flag: '🔴', color: 'text-red-600' };
+    }
+  };
+
+  // Function to detect inconsistencies in Repacking costs
+  const detectInconsistencies = () => {
+    if (!analysisData || !analysisData.byExporter) return [];
+    
+    const avgRepacking = analysisData.summary?.avgPerBox || 0;
+    const inconsistencies = [];
+    
+    // Convert byExporter object to array
+    const exportersArray = Object.values(analysisData.byExporter);
+    
+    exportersArray.forEach(exporter => {
+      const deviation = Math.abs(exporter.avgPerBox - avgRepacking);
+      const percentageDeviation = avgRepacking > 0 ? (deviation / avgRepacking) * 100 : 0;
+      
+      // Show all deviations >= 10% (Medium and High)
+      if (percentageDeviation >= 10) {
+        const category = categorizeDeviation(percentageDeviation);
+        inconsistencies.push({
+          exporter: exporter.exporter,
+          cost: exporter.avgPerBox,
+          deviation: percentageDeviation,
+          type: exporter.avgPerBox > avgRepacking ? 'High' : 'Low',
+          flag: category.flag,
+          severity: category.severity,
+          level: category.level,
+          color: category.color
+        });
+      }
+    });
+    
+    return inconsistencies.sort((a, b) => b.deviation - a.deviation);
+  };
+
+  const inconsistencies = detectInconsistencies();
+
   // Convert byExporter object to array for chart data
   const exportersArray = Object.values(analysisData.byExporter);
 
@@ -966,6 +1030,56 @@ const RepackingAnalysis = () => {
         showChart={false}
         containerClass=""
       />
+
+      {/* Inconsistency Detection Table */}
+      {inconsistencies.length > 0 && (
+        <div className="mb-6">
+          <h5 className="text-md font-semibold text-[#EE6C4D] mb-3">🔍 Detected Repacking Cost Inconsistencies</h5>
+          <div className="bg-white rounded-lg overflow-hidden shadow-sm border">
+            <table className="w-full text-sm">
+              <thead className="bg-[#3D5A80] text-white">
+                <tr>
+                  <th className="p-3 text-left">Flag</th>
+                  <th className="p-3 text-left">Exporter</th>
+                  <th className="p-3 text-right">Cost/Box</th>
+                  <th className="p-3 text-right">Deviation</th>
+                  <th className="p-3 text-center">Analysis Level</th>
+                  <th className="p-3 text-center">Issue Type</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inconsistencies.map((item, index) => (
+                  <tr key={index} className={index % 2 === 0 ? 'bg-[#E8F4F8]' : 'bg-white'}>
+                    <td className="p-3 text-center text-lg">{item.flag}</td>
+                    <td className="p-3 font-medium text-[#3D5A80]">{item.exporter}</td>
+                    <td className="p-3 text-right font-semibold">{formatPrice(item.cost)}</td>
+                    <td className={`p-3 text-right font-bold ${item.color}`}>{item.deviation.toFixed(1)}%</td>
+                    <td className={`p-3 text-center font-semibold ${item.color}`}>{item.level}</td>
+                    <td className="p-3 text-center">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        item.type === 'High' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {item.type} Cost
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Summary if no inconsistencies */}
+      {inconsistencies.length === 0 && (
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <span className="text-green-600 text-lg mr-2">✅</span>
+            <span className="text-green-800 font-semibold">No significant cost inconsistencies detected</span>
+          </div>
+          <p className="text-green-700 text-sm mt-1">All repacking costs are within normal deviation range (&lt; 10%)</p>
+        </div>
+      )}
 
       {/* Breakdown by Charge Type */}
       {analysisData.analysis && (
