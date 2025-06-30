@@ -1893,34 +1893,66 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
         hasIssue = true;
       }
       
-      // Check for outlier costs (> 3 standard deviations)
+      // Check for outlier costs with multiple severity levels
       const validCosts = lots.filter(l => l.costPerBox !== null).map(l => l.costPerBox);
       if (validCosts.length > 0) {
         const mean = validCosts.reduce((a, b) => a + b, 0) / validCosts.length;
         const stdDev = Math.sqrt(validCosts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / validCosts.length);
         
-        if (lot.costPerBox !== null && Math.abs(lot.costPerBox - mean) > 3 * stdDev) {
-          issues.push({
-            lotId: lot.lotid,
-            exporter: exporter,
-            type: 'Statistical Outlier',
-            severity: 'Medium',
-            description: `Cost significantly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)})`,
-            costPerBox: lot.costPerBox,
-            totalCharges: lot.totalChargeAmount || 0
-          });
-          hasIssue = true;
+        if (lot.costPerBox !== null) {
+          const deviation = Math.abs(lot.costPerBox - mean);
+          const deviationFactor = deviation / stdDev;
+          
+          // More granular outlier detection:
+          // > 3 std dev = High severity (extreme outlier)
+          // > 2 std dev = Medium severity (moderate outlier) 
+          // > 1.5 std dev = Low severity (mild outlier)
+          if (deviationFactor > 3) {
+            issues.push({
+              lotId: lot.lotid,
+              exporter: exporter,
+              type: 'Extreme Statistical Outlier',
+              severity: 'High',
+              description: `Cost extremely deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ)`,
+              costPerBox: lot.costPerBox,
+              totalCharges: lot.totalChargeAmount || 0
+            });
+            hasIssue = true;
+          } else if (deviationFactor > 2) {
+            issues.push({
+              lotId: lot.lotid,
+              exporter: exporter,
+              type: 'Statistical Outlier',
+              severity: 'Medium',
+              description: `Cost significantly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ)`,
+              costPerBox: lot.costPerBox,
+              totalCharges: lot.totalChargeAmount || 0
+            });
+            hasIssue = true;
+          } else if (deviationFactor > 1.5) {
+            issues.push({
+              lotId: lot.lotid,
+              exporter: exporter,
+              type: 'Mild Statistical Outlier',
+              severity: 'Low',
+              description: `Cost mildly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ)`,
+              costPerBox: lot.costPerBox,
+              totalCharges: lot.totalChargeAmount || 0
+            });
+            hasIssue = true;
+          }
         }
       }
 
       // Check for data inconsistency: cost per box exists but no total charges
       if ((lot.costPerBox !== null && lot.costPerBox > 0) && (!lot.totalChargeAmount || lot.totalChargeAmount === 0)) {
+        const formattedTotalCharges = (lot.totalChargeAmount || 0) === 0 ? '$0' : `$${(lot.totalChargeAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         issues.push({
           lotId: lot.lotid,
           exporter: exporter,
           type: 'Data Inconsistency',
           severity: 'High',
-          description: `Cost per box (${formatPrice(lot.costPerBox)}) calculated but total charge amount is ${formatPrice(lot.totalChargeAmount || 0)} - Mathematical inconsistency detected`,
+          description: `Cost per box (${formatPrice(lot.costPerBox)}) calculated but total charge amount is ${formattedTotalCharges} - Mathematical inconsistency detected`,
           costPerBox: lot.costPerBox,
           totalCharges: lot.totalChargeAmount || 0
         });
@@ -1943,12 +1975,13 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
       
       // If no issues found, add as "Consistent" with Low severity to show all lots are being reviewed
       if (!hasIssue) {
+        const formattedTotalCharges = (lot.totalChargeAmount || 0) === 0 ? '$0' : `$${(lot.totalChargeAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         issues.push({
           lotId: lot.lotid,
           exporter: exporter,
           type: 'Consistent',
           severity: 'Low',
-          description: `Data is consistent - Cost per box: ${formatPrice(lot.costPerBox || 0)}, Total charges: ${formatPrice(lot.totalChargeAmount || 0)}`,
+          description: `Data is consistent - Cost per box: ${formatPrice(lot.costPerBox || 0)}, Total charges: ${formattedTotalCharges}`,
           costPerBox: lot.costPerBox,
           totalCharges: lot.totalChargeAmount || 0
         });
@@ -2031,19 +2064,19 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
         </h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{Object.keys(metrics).length}</div>
+            <div className="text-2xl font-bold text-blue-600">{Object.keys(metrics).length.toLocaleString()}</div>
             <div className="text-gray-600">Total Lots Reviewed</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{consistencyData.filter(i => i.severity === 'Low').length}</div>
+            <div className="text-2xl font-bold text-green-600">{consistencyData.filter(i => i.severity === 'Low').length.toLocaleString()}</div>
             <div className="text-gray-600">Consistent Lots</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-orange-600">{consistencyData.filter(i => i.severity === 'Medium').length}</div>
+            <div className="text-2xl font-bold text-orange-600">{consistencyData.filter(i => i.severity === 'Medium').length.toLocaleString()}</div>
             <div className="text-gray-600">Medium Issues</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-red-600">{consistencyData.filter(i => i.severity === 'High').length}</div>
+            <div className="text-2xl font-bold text-red-600">{consistencyData.filter(i => i.severity === 'High').length.toLocaleString()}</div>
             <div className="text-gray-600">High Issues</div>
           </div>
         </div>
