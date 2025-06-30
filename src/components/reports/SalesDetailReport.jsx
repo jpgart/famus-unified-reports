@@ -1292,6 +1292,8 @@ const ExporterComparator = ({ data, exporters }) => {
 
   const enhancedChartOptions = useMemo(() => {
     const baseOptions = getDynamicChartOptions(isMobileView);
+    // Remove zoom functionality from enhanced chart options
+    delete baseOptions.plugins.zoom;
     return {
       ...baseOptions,
       animation: {
@@ -1503,9 +1505,11 @@ const PriceHistory = ({ data, groupKey }) => {
   const filtered = data.filter(d => d[groupKey] === selected);
   const isMobileView = useIsMobile();
   
-  // Mobile-optimized chart options for Price History
+  // Mobile-optimized chart options for Price History (without zoom)
   const priceHistoryOptions = useMemo(() => {
     const baseOptions = getDynamicChartOptions(isMobileView);
+    // Remove zoom functionality from price history chart
+    delete baseOptions.plugins.zoom;
     return {
       ...baseOptions,
       plugins: {
@@ -1937,6 +1941,7 @@ const CombinedKPIChart = ({ data, exporterFilter }) => {
           },
         },
       },
+      // No zoom plugin for KPI chart
     },
   };
 
@@ -1958,10 +1963,15 @@ const SalesDetailReport = ({ onRefsUpdate }) => {
   // Use the custom hook to detect mobile
   const isMobile = useIsMobile();
 
-  // Create dynamic chart options for this component instance
-  const chartOptions = useMemo(() => getDynamicChartOptions(isMobile), [isMobile]);
+  // Create chart options without zoom for all charts in this report
+  const chartOptions = useMemo(() => {
+    const options = getDynamicChartOptions(isMobile);
+    // Remove zoom functionality from all charts
+    delete options.plugins.zoom;
+    return options;
+  }, [isMobile]);
   
-  // Create chart options without zoom for Filtered Sales Analysis
+  // Keep chartOptionsNoZoom for backward compatibility
   const chartOptionsNoZoom = useMemo(() => {
     const options = getDynamicChartOptions(isMobile);
     // Remove zoom functionality
