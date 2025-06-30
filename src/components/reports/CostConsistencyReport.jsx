@@ -1873,7 +1873,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
           severity: 'High',
           description: 'Lot missing exporter information',
           costPerBox: lot.costPerBox,
-          totalCharges: lot.totalCharges
+          totalCharges: lot.totalChargeAmount || 0
         });
       }
       
@@ -1886,7 +1886,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
           severity: 'High',
           description: 'Cost per box is null or zero',
           costPerBox: lot.costPerBox,
-          totalCharges: lot.totalCharges
+          totalCharges: lot.totalChargeAmount || 0
         });
       }
       
@@ -1904,26 +1904,26 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
             severity: 'Medium',
             description: `Cost significantly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)})`,
             costPerBox: lot.costPerBox,
-            totalCharges: lot.totalCharges
+            totalCharges: lot.totalChargeAmount || 0
           });
         }
       }
 
       // Check for data inconsistency: cost per box exists but no total charges
-      if ((lot.costPerBox !== null && lot.costPerBox > 0) && (!lot.totalCharges || lot.totalCharges === 0)) {
+      if ((lot.costPerBox !== null && lot.costPerBox > 0) && (!lot.totalChargeAmount || lot.totalChargeAmount === 0)) {
         issues.push({
           lotId: lot.lotid,
           exporter: exporter,
           type: 'Data Inconsistency',
           severity: 'High',
-          description: `Cost per box (${formatPrice(lot.costPerBox)}) calculated but no total charges recorded`,
+          description: `Cost per box (${formatPrice(lot.costPerBox)}) calculated but total charge amount is ${formatPrice(lot.totalChargeAmount || 0)} - Mathematical inconsistency detected`,
           costPerBox: lot.costPerBox,
-          totalCharges: lot.totalCharges || 0
+          totalCharges: lot.totalChargeAmount || 0
         });
       }
       
       // Check for missing total charges (when cost per box is also null/zero)
-      else if ((!lot.costPerBox || lot.costPerBox === 0) && (!lot.totalCharges || lot.totalCharges === 0)) {
+      else if ((!lot.costPerBox || lot.costPerBox === 0) && (!lot.totalChargeAmount || lot.totalChargeAmount === 0)) {
         issues.push({
           lotId: lot.lotid,
           exporter: exporter,
@@ -1931,7 +1931,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
           severity: 'Medium',
           description: 'No charge data found for this lot',
           costPerBox: lot.costPerBox,
-          totalCharges: 0
+          totalCharges: lot.totalChargeAmount || 0
         });
       }
     });
