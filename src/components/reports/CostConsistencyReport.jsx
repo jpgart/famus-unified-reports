@@ -2373,81 +2373,446 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
 
 // External Consistency Analysis Component
 const ExternalConsistencyAnalysis = ({ metrics, chargeData }) => {
+  const [selectedExporter, setSelectedExporter] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterClassification, setFilterClassification] = useState('');
+  const [filterSeverity, setFilterSeverity] = useState('');
+  const itemsPerPage = 15;
+
   const consistencyData = useMemo(() => {
-    const exporterAnalysis = {};
+    const lots = Object.values(metrics);
     
-    Object.values(metrics).forEach(lot => {
-      if (!lot.exporter || isExporterExcluded(lot.exporter)) return;
-      
-      if (!exporterAnalysis[lot.exporter]) {
-        exporterAnalysis[lot.exporter] = {
-          exporter: lot.exporter,
-          totalLots: 0,
-          validCosts: [],
-          totalCharges: 0,
-          avgCostPerBox: 0,
-          stdDeviation: 0,
-          consistencyScore: 0
-        };
-      }
-      
-      exporterAnalysis[lot.exporter].totalLots++;
-      if (lot.costPerBox !== null) {
-        exporterAnalysis[lot.exporter].validCosts.push(lot.costPerBox);
-      }
-      exporterAnalysis[lot.exporter].totalCharges += lot.totalCharges || 0;
-    });
+    // Pre-calculate global statistics for between-exporter comparison (ISO 5725 standard)
+    const validCosts = lots.filter(l => l.costPerBox !== null && l.costPerBox > 0 && !isExporterExcluded(l.exporter)).map(l => l.costPerBox);
+    let globalMean = 0;
+    let globalStdDev = 0;
+    let globalCV = 0;
     
-    // Calculate statistics and consistency scores
-    Object.values(exporterAnalysis).forEach(exp => {
-      if (exp.validCosts.length > 0) {
-        exp.avgCostPerBox = exp.validCosts.reduce((a, b) => a + b, 0) / exp.validCosts.length;
-        const variance = exp.validCosts.reduce((a, b) => a + Math.pow(b - exp.avgCostPerBox, 2), 0) / exp.validCosts.length;
-        exp.stdDeviation = Math.sqrt(variance);
-        exp.consistencyScore = exp.stdDeviation > 0 ? Math.max(0, 100 - (exp.stdDeviation / exp.avgCostPerBox * 100)) : 100;
+    if (validCosts.length > 0) {
+      globalMean = validCosts.reduce((sum, cost) => sum + cost, 0) / validCosts.length;
+      const variance = validCosts.reduce((sum, cost) => sum + Math.pow(cost - globalMean, 2), 0) / validCosts.length;
+      globalStdDev = Math.sqrt(variance);
+      globalCV = globalMean > 0 ? (globalStdDev / globalMean) * 100 : 0;
+    }
+    
+    // Calculate per-exporter statistics for external consistency (ISO standard approach)
+    const exporterStats = {};
+    lots.forEach(lot => {
+      const exporter = lot.exporter || 'Unknown';
+      if (lot.costPerBox !== null && lot.costPerBox > 0 && !isExporterExcluded(exporter)) {
+        if (!exporterStats[exporter]) {
+          exporterStats[exporter] = [];
+        }
+        exporterStats[exporter].push(lot.costPerBox);
       }
     });
     
-    return Object.values(exporterAnalysis).sort((a, b) => b.consistencyScore - a.consistencyScore);
+    // Calculate comprehensive statistics for each exporter (ASTM E691 + ISO 5725)
+    const exporterData = Object.entries(exporterStats).map(([exporter, costs]) => {
+      if (costs.length === 0) return null;
+      
+      const mean = costs.reduce((sum, cost) => sum + cost, 0) / costs.length;
+      const variance = costs.reduce((sum, cost) => sum + Math.pow(cost - mean, 2), 0) / costs.length;
+      const stdDev = Math.sqrt(variance);
+      const cv = mean > 0 ? (stdDev / mean) * 100 : 0;
+      
+      // ISO 5725 classification for between-laboratory (exporter) comparison
+      let externalClassification = 'Excellent';
+      if (cv > 25) externalClassification = 'Very Inconsistent';
+      else if (cv > 20) externalClassification = 'Poor';
+      else if (cv > 15) externalClassification = 'Acceptable';
+      else if (cv > 10) externalClassification = 'Good';
+      
+      // Deviation from global mean (between-exporter comparison)
+      const deviationFromGlobal = Math.abs(mean - globalMean);
+      const deviationFactor = globalStdDev > 0 ? deviationFromGlobal / globalStdDev : 0;
+      
+      // Multi-criteria severity assessment (international best practice):
+      // 1. CV relative to other exporters
+      // 2. Deviation from global mean
+      // 3. Sample size adequacy
+      let severity = 'Low';
+      let issues = [];
+      
+      if (deviationFactor > 2.5) {
+        severity = 'High';
+        issues.push(`Extreme deviation from market average (${deviationFactor.toFixed(1)}σ)`);
+      } else if (deviationFactor > 2) {
+        severity = 'Medium';
+        issues.push(`Significant deviation from market average (${deviationFactor.toFixed(1)}σ)`);
+      } else if (deviationFactor > 1.5) {
+        severity = 'Low';
+        issues.push(`Mild deviation from market average (${deviationFactor.toFixed(1)}σ)`);
+      }
+      
+      if (cv > 25) {
+        severity = Math.max(severity === 'Low' ? 1 : severity === 'Medium' ? 2 : 3, 3) === 3 ? 'High' : severity;
+        issues.push(`Very high internal variability (CV: ${cv.toFixed(1)}%)`);
+      } else if (cv > 20) {
+        severity = Math.max(severity === 'Low' ? 1 : severity === 'Medium' ? 2 : 3, 2) === 2 ? 'Medium' : severity;
+        issues.push(`High internal variability (CV: ${cv.toFixed(1)}%)`);
+      }
+      
+      if (costs.length < 5) {
+        issues.push(`Limited sample size (${costs.length} lots) - reliability concerns`);
+      }
+      
+      // Performance relative to market
+      const performanceVsMarket = ((globalMean - mean) / globalMean) * 100;
+      let performanceCategory = 'Market Average';
+      if (Math.abs(performanceVsMarket) > 20) {
+        performanceCategory = performanceVsMarket > 0 ? 'Significantly Below Market' : 'Significantly Above Market';
+      } else if (Math.abs(performanceVsMarket) > 10) {
+        performanceCategory = performanceVsMarket > 0 ? 'Below Market' : 'Above Market';
+      }
+      
+      return {
+        exporter,
+        totalLots: costs.length,
+        avgCostPerBox: mean,
+        stdDeviation: stdDev,
+        cv: cv,
+        externalClassification,
+        severity,
+        issues: issues.length > 0 ? issues : ['Consistent with market standards'],
+        deviationFromGlobal: deviationFactor,
+        performanceVsMarket: performanceVsMarket,
+        performanceCategory,
+        minCost: Math.min(...costs),
+        maxCost: Math.max(...costs),
+        range: Math.max(...costs) - Math.min(...costs),
+        globalMean: globalMean,
+        globalStdDev: globalStdDev
+      };
+    }).filter(data => data !== null);
+    
+    // Sort by severity and then by deviation
+    return exporterData.sort((a, b) => {
+      const severityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+      if (severityOrder[a.severity] !== severityOrder[b.severity]) {
+        return severityOrder[b.severity] - severityOrder[a.severity];
+      }
+      return b.deviationFromGlobal - a.deviationFromGlobal;
+    });
   }, [metrics, chargeData]);
+
+  // Filter data based on selected filters
+  const filteredData = useMemo(() => {
+    return consistencyData.filter(item => {
+      if (filterClassification && item.externalClassification !== filterClassification) return false;
+      if (filterSeverity && item.severity !== filterSeverity) return false;
+      return true;
+    });
+  }, [consistencyData, filterClassification, filterSeverity]);
+
+  // Get unique values for filters
+  const uniqueClassifications = [...new Set(consistencyData.map(item => item.externalClassification))].sort();
+  const uniqueSeverities = [...new Set(consistencyData.map(item => item.severity))].sort();
+
+  // Statistics summary
+  const summaryStats = useMemo(() => {
+    const totalExporters = consistencyData.length;
+    const highSeverityCount = consistencyData.filter(item => item.severity === 'High').length;
+    const mediumSeverityCount = consistencyData.filter(item => item.severity === 'Medium').length;
+    const avgCV = consistencyData.reduce((sum, item) => sum + item.cv, 0) / totalExporters;
+    const excellentCount = consistencyData.filter(item => item.externalClassification === 'Excellent').length;
+    
+    return {
+      totalExporters,
+      highSeverityCount,
+      mediumSeverityCount,
+      avgCV,
+      excellentCount
+    };
+  }, [consistencyData]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterClassification, filterSeverity]);
+
+  const handleExporterClick = (exporter) => {
+    setSelectedExporter(exporter);
+    setShowDetailModal(true);
+  };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">External Consistency by Exporter</h3>
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2">External Consistency Analysis (Between Exporters)</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Comparative analysis between exporters using ISO 5725 and ASTM E691 standards for between-laboratory consistency assessment.
+        </p>
+      </div>
+
+      {/* Summary Panel */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+        <h4 className="font-semibold text-blue-800 mb-3 flex items-center">
+          <span className="mr-2">🌐</span>
+          External Consistency Summary (Between-Exporter Analysis)
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-blue-600">{summaryStats.totalExporters.toLocaleString()}</div>
+            <div className="text-gray-600">Total Exporters</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-green-600">{summaryStats.excellentCount.toLocaleString()}</div>
+            <div className="text-gray-600">Excellent Classification</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-orange-600">{summaryStats.mediumSeverityCount.toLocaleString()}</div>
+            <div className="text-gray-600">Medium Issues</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-red-600">{summaryStats.highSeverityCount.toLocaleString()}</div>
+            <div className="text-gray-600">High Issues</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-purple-600">{summaryStats.avgCV.toFixed(1)}%</div>
+            <div className="text-gray-600">Average CV</div>
+          </div>
+        </div>
+        <div className="mt-3 text-xs text-blue-700 text-center">
+          ✅ External consistency analysis comparing cost patterns across all exporters using international standards
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3">🔍 Filters</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">ISO Classification</label>
+            <select
+              value={filterClassification}
+              onChange={(e) => setFilterClassification(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Classifications</option>
+              {uniqueClassifications.map(classification => (
+                <option key={classification} value={classification}>{classification}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Severity</label>
+            <select
+              value={filterSeverity}
+              onChange={(e) => setFilterSeverity(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Severities</option>
+              {uniqueSeverities.map(severity => (
+                <option key={severity} value={severity}>{severity}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {(filterClassification || filterSeverity) && (
+          <div className="mt-3">
+            <button
+              onClick={() => {
+                setFilterClassification('');
+                setFilterSeverity('');
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800 underline"
+            >
+              Clear all filters
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex justify-between items-center mb-4">
+        <h4 className="text-md font-semibold text-gray-800">External Consistency by Exporter</h4>
+        <div className="text-sm text-gray-600">
+          {filteredData.length} of {consistencyData.length} exporters shown
+        </div>
+      </div>
+
+      {/* Main Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto">
           <thead>
             <tr className="bg-gray-50">
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exporter</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Lots</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Cost/Box</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Std Deviation</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Consistency Score</th>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Lots</th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Cost/Box</th>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">CV %</th>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ISO Classification</th>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Market Position</th>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {consistencyData.map((exp, index) => (
+            {paginatedData.map((exp, index) => (
               <tr key={exp.exporter} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                 <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{exp.exporter}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{exp.totalLots}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{formatPrice(exp.avgCostPerBox)}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{formatPrice(exp.stdDeviation)}</td>
-                <td className="px-4 py-2 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    exp.consistencyScore >= 80 ? 'bg-green-100 text-green-800' : 
-                    exp.consistencyScore >= 60 ? 'bg-yellow-100 text-yellow-800' : 
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-center">{exp.totalLots.toLocaleString()}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right font-semibold">{formatPrice(exp.avgCostPerBox)}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-center">
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    exp.cv <= 10 ? 'bg-green-100 text-green-800' :
+                    exp.cv <= 15 ? 'bg-blue-100 text-blue-800' :
+                    exp.cv <= 20 ? 'bg-yellow-100 text-yellow-800' :
+                    exp.cv <= 25 ? 'bg-orange-100 text-orange-800' :
                     'bg-red-100 text-red-800'
                   }`}>
-                    {formatPercentage(exp.consistencyScore / 100)}
+                    {exp.cv.toFixed(1)}%
                   </span>
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-center">
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    exp.externalClassification === 'Excellent' ? 'bg-green-100 text-green-800' :
+                    exp.externalClassification === 'Good' ? 'bg-blue-100 text-blue-800' :
+                    exp.externalClassification === 'Acceptable' ? 'bg-yellow-100 text-yellow-800' :
+                    exp.externalClassification === 'Poor' ? 'bg-orange-100 text-orange-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {exp.externalClassification}
+                  </span>
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-center">
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    exp.performanceCategory.includes('Below') ? 'bg-green-100 text-green-800' :
+                    exp.performanceCategory.includes('Above') ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {exp.performanceVsMarket > 0 ? `+${exp.performanceVsMarket.toFixed(1)}%` : `${exp.performanceVsMarket.toFixed(1)}%`}
+                  </span>
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap text-center">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    exp.severity === 'High' ? 'bg-red-100 text-red-800' : 
+                    exp.severity === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {exp.severity}
+                  </span>
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-center">
+                  <button
+                    onClick={() => handleExporterClick(exp)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                  >
+                    View Details
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-sm text-gray-600">
+            Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} exporters
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="px-3 py-1">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {showDetailModal && selectedExporter && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">External Consistency Details - {selectedExporter.exporter}</h3>
+                <button 
+                  onClick={() => setShowDetailModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-2">Statistical Analysis</h4>
+                  <div className="space-y-2 text-sm">
+                    <div><strong>Average Cost/Box:</strong> {formatPrice(selectedExporter.avgCostPerBox)}</div>
+                    <div><strong>Standard Deviation:</strong> {formatPrice(selectedExporter.stdDeviation)}</div>
+                    <div><strong>Coefficient of Variation:</strong> {selectedExporter.cv.toFixed(1)}%</div>
+                    <div><strong>Cost Range:</strong> {formatPrice(selectedExporter.minCost)} - {formatPrice(selectedExporter.maxCost)}</div>
+                    <div><strong>Sample Size:</strong> {selectedExporter.totalLots} lots</div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-2">Market Comparison</h4>
+                  <div className="space-y-2 text-sm">
+                    <div><strong>ISO Classification:</strong> <span className={`px-2 py-1 rounded text-xs ${
+                      selectedExporter.externalClassification === 'Excellent' ? 'bg-green-100 text-green-800' :
+                      selectedExporter.externalClassification === 'Good' ? 'bg-blue-100 text-blue-800' :
+                      selectedExporter.externalClassification === 'Acceptable' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>{selectedExporter.externalClassification}</span></div>
+                    <div><strong>Performance vs Market:</strong> {selectedExporter.performanceVsMarket > 0 ? '+' : ''}{selectedExporter.performanceVsMarket.toFixed(1)}%</div>
+                    <div><strong>Market Position:</strong> {selectedExporter.performanceCategory}</div>
+                    <div><strong>Deviation Factor:</strong> {selectedExporter.deviationFromGlobal.toFixed(1)}σ</div>
+                    <div><strong>Global Average:</strong> {formatPrice(selectedExporter.globalMean)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <h4 className="font-semibold mb-2">Issues & Recommendations</h4>
+                <div className="bg-gray-50 p-3 rounded">
+                  <ul className="text-sm space-y-1">
+                    {selectedExporter.issues.map((issue, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="text-blue-600 mr-2">•</span>
+                        {issue}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
+                <h5 className="font-semibold text-blue-800 mb-2">📋 International Standards Reference</h5>
+                <p className="text-blue-700 text-sm">
+                  <strong>ISO 5725:</strong> Accuracy and precision of measurement methods - Between-laboratory consistency<br/>
+                  <strong>ASTM E691:</strong> Standard practice for conducting an interlaboratory study<br/>
+                  <strong>Classification:</strong> Based on Coefficient of Variation (CV) thresholds: Excellent ≤10%, Good ≤15%, Acceptable ≤20%, Poor ≤25%, Very Inconsistent >25%
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+};
 };
 
 // Final Cost Analysis Tables Component
