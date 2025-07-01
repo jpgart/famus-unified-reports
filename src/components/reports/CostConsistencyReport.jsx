@@ -1976,12 +1976,23 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
       // If no issues found, add as "Consistent" with Low severity to show all lots are being reviewed
       if (!hasIssue) {
         const formattedTotalCharges = (lot.totalChargeAmount || 0) === 0 ? '$0' : `$${(lot.totalChargeAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        
+        // Calculate deviation info for consistent lots too
+        let deviationInfo = '';
+        if (validCosts.length > 0 && lot.costPerBox !== null) {
+          const mean = validCosts.reduce((a, b) => a + b, 0) / validCosts.length;
+          const stdDev = Math.sqrt(validCosts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / validCosts.length);
+          const deviation = Math.abs(lot.costPerBox - mean);
+          const deviationFactor = deviation / stdDev;
+          deviationInfo = ` (${deviationFactor.toFixed(1)}σ from avg ${formatPrice(mean)})`;
+        }
+        
         issues.push({
           lotId: lot.lotid,
           exporter: exporter,
           type: 'Consistent',
           severity: 'Low',
-          description: `Data is consistent - Cost per box: ${formatPrice(lot.costPerBox || 0)}, Total charges: ${formattedTotalCharges}`,
+          description: `Data is consistent - Cost per box: ${formatPrice(lot.costPerBox || 0)}, Total charges: ${formattedTotalCharges}${deviationInfo}`,
           costPerBox: lot.costPerBox,
           totalCharges: lot.totalChargeAmount || 0
         });
@@ -2671,7 +2682,7 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
                 <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{lot.lotid}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lot.exporter}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{formatPrice(lot.costPerBox)}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{formatPrice(lot.totalCharges || 0)}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">${(lot.totalCharges || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm">
                   <button
                     onClick={() => handleLotClick(lot)}
