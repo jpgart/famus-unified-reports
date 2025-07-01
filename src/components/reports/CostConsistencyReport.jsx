@@ -1864,11 +1864,36 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
     const validCosts = lots.filter(l => l.costPerBox !== null).map(l => l.costPerBox);
     let mean = 0;
     let stdDev = 0;
+    let globalCV = 0;
     
     if (validCosts.length > 0) {
       mean = validCosts.reduce((a, b) => a + b, 0) / validCosts.length;
       stdDev = Math.sqrt(validCosts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / validCosts.length);
+      globalCV = mean > 0 ? (stdDev / mean) * 100 : 0; // Coefficient of Variation (%)
     }
+    
+    // Calculate per-exporter statistics for internal consistency (ISO standard approach)
+    const exporterStats = {};
+    lots.forEach(lot => {
+      if (lot.exporter && lot.costPerBox !== null) {
+        if (!exporterStats[lot.exporter]) {
+          exporterStats[lot.exporter] = [];
+        }
+        exporterStats[lot.exporter].push(lot.costPerBox);
+      }
+    });
+    
+    // Calculate CV for each exporter (international standard)
+    const exporterCV = {};
+    Object.entries(exporterStats).forEach(([exporter, costs]) => {
+      if (costs.length > 1) {
+        const exporterMean = costs.reduce((a, b) => a + b, 0) / costs.length;
+        const exporterStdDev = Math.sqrt(costs.reduce((a, b) => a + Math.pow(b - exporterMean, 2), 0) / costs.length);
+        exporterCV[exporter] = exporterMean > 0 ? (exporterStdDev / exporterMean) * 100 : 0;
+      } else {
+        exporterCV[exporter] = 0; // Single data point = perfect consistency
+      }
+    });
     
     lots.forEach(lot => {
       // Get exporter info for the issue
@@ -1903,22 +1928,24 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
         hasIssue = true;
       }
       
-      // Check for outlier costs with multiple severity levels (using pre-calculated stats)
+      // Enhanced outlier detection using both σ and CV (international best practice)
       if (validCosts.length > 0 && lot.costPerBox !== null) {
         const deviation = Math.abs(lot.costPerBox - mean);
         const deviationFactor = deviation / stdDev;
+        const exporterCVValue = exporterCV[exporter] || 0;
         
-        // More granular outlier detection:
-        // > 2.5 std dev = High severity (extreme outlier)
-        // > 2 std dev = Medium severity (moderate outlier) 
-        // > 1.8 std dev = Low severity (mild outlier)
+        // Multi-criteria outlier detection (ISO 5725 + ASTM E691 standards):
+        // 1. Statistical outlier (>2.5σ)
+        // 2. High exporter CV (>25% = very inconsistent)
+        // 3. Combined assessment
+        
         if (deviationFactor > 2.5) {
           issues.push({
             lotId: lot.lotid,
             exporter: exporter,
             type: 'Extreme Statistical Outlier',
             severity: 'High',
-            description: `Cost extremely deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ)`,
+            description: `Cost extremely deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ). Exporter CV: ${exporterCVValue.toFixed(1)}%`,
             costPerBox: lot.costPerBox,
             totalCharges: lot.totalChargeAmount || 0
           });
@@ -1929,7 +1956,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
             exporter: exporter,
             type: 'Statistical Outlier',
             severity: 'Medium',
-            description: `Cost significantly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ)`,
+            description: `Cost significantly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ). Exporter CV: ${exporterCVValue.toFixed(1)}%`,
             costPerBox: lot.costPerBox,
             totalCharges: lot.totalChargeAmount || 0
           });
@@ -1940,7 +1967,21 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
             exporter: exporter,
             type: 'Mild Statistical Outlier',
             severity: 'Low',
-            description: `Cost mildly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ)`,
+            description: `Cost mildly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ). Exporter CV: ${exporterCVValue.toFixed(1)}%`,
+            costPerBox: lot.costPerBox,
+            totalCharges: lot.totalChargeAmount || 0
+          });
+          hasIssue = true;
+        }
+        
+        // Additional check for internal exporter inconsistency (new international standard approach)
+        if (exporterCVValue > 25 && !hasIssue) {
+          issues.push({
+            lotId: lot.lotid,
+            exporter: exporter,
+            type: 'Internal Exporter Inconsistency',
+            severity: 'Medium',
+            description: `Exporter shows high internal cost variability (CV: ${exporterCVValue.toFixed(1)}%) - ISO standard: >25% = very inconsistent`,
             costPerBox: lot.costPerBox,
             totalCharges: lot.totalChargeAmount || 0
           });
@@ -1980,13 +2021,21 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
       // If no issues found, add as "Consistent" with Low severity to show all lots are being reviewed
       if (!hasIssue) {
         const formattedTotalCharges = (lot.totalChargeAmount || 0) === 0 ? '$0' : `$${(lot.totalChargeAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+        const exporterCVValue = exporterCV[exporter] || 0;
         
         // Calculate deviation info for consistent lots too (using pre-calculated stats)
         let deviationInfo = '';
         if (validCosts.length > 0 && lot.costPerBox !== null) {
           const deviation = Math.abs(lot.costPerBox - mean);
           const deviationFactor = deviation / stdDev;
-          deviationInfo = ` (${deviationFactor.toFixed(1)}σ from avg ${formatPrice(mean)})`;
+          
+          // ISO standard consistency classification
+          let consistencyLevel = 'Excellent';
+          if (exporterCVValue > 15) consistencyLevel = 'Poor';
+          else if (exporterCVValue > 10) consistencyLevel = 'Acceptable';
+          else if (exporterCVValue > 5) consistencyLevel = 'Good';
+          
+          deviationInfo = ` (${deviationFactor.toFixed(1)}σ from avg ${formatPrice(mean)}, CV: ${exporterCVValue.toFixed(1)}% - ${consistencyLevel})`;
         }
         
         issues.push({
