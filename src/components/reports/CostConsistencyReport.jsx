@@ -498,6 +498,23 @@ const ExporterCostComparator = ({ metrics }) => {
 
   const chartOptions = {
     ...getDefaultChartOptions('Cost vs Consistency by Exporter'),
+    plugins: {
+      ...getDefaultChartOptions('Cost vs Consistency by Exporter').plugins,
+      zoom: {
+        zoom: {
+          wheel: {
+            enabled: false,
+          },
+          pinch: {
+            enabled: false
+          },
+          mode: 'xy',
+        },
+        pan: {
+          enabled: false
+        }
+      }
+    },
     scales: {
       y: {
         type: 'linear',
@@ -606,6 +623,29 @@ const ExporterCostComparator = ({ metrics }) => {
 const OceanFreightAnalysis = () => {
   const [freightData, setFreightData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterSeverity, setFilterSeverity] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const itemsPerPage = 15;
+
+  // Filter logic
+  const filteredInconsistencies = useMemo(() => {
+    return lotInconsistencies.filter(item => {
+      const severityMatch = !filterSeverity || item.severity === filterSeverity;
+      const typeMatch = !filterType || item.type === filterType;
+      return severityMatch && typeMatch;
+    });
+  }, [lotInconsistencies, filterSeverity, filterType]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredInconsistencies.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedInconsistencies = filteredInconsistencies.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterSeverity, filterType]);
 
   useEffect(() => {
     const loadFreightAnalysis = async () => {
@@ -889,6 +929,63 @@ const OceanFreightAnalysis = () => {
         </div>
       </div>
 
+      {/* Filtros para la tabla de inconsistencias */}
+      {lotInconsistencies.length > 0 && (
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">🔍 Filters</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Severity</label>
+              <select
+                value={filterSeverity}
+                onChange={(e) => setFilterSeverity(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Severities</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Cost Type</label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Types</option>
+                <option value="High">High Cost</option>
+                <option value="Low">Low Cost</option>
+              </select>
+            </div>
+          </div>
+          {(filterSeverity || filterType) && (
+            <div className="mt-3">
+              <button
+                onClick={() => {
+                  setFilterSeverity('');
+                  setFilterType('');
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Contador y título de tabla */}
+      {lotInconsistencies.length > 0 && (
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="text-md font-semibold text-gray-800">Ocean Freight Cost Analysis by Lot</h4>
+          <div className="text-sm text-gray-600">
+            {filteredInconsistencies.length} of {lotInconsistencies.length} lots shown
+          </div>
+        </div>
+      )}
+
       {/* Inconsistency Detection Table */}
       {lotInconsistencies.length > 0 && (
         <div className="mb-6">
@@ -1005,6 +1102,29 @@ const RepackingAnalysis = () => {
   const [analysisData, setAnalysisData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lotInconsistencies, setLotInconsistencies] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterSeverity, setFilterSeverity] = useState('');
+  const [filterType, setFilterType] = useState('');
+  const itemsPerPage = 15;
+
+  // Filter logic
+  const filteredInconsistencies = useMemo(() => {
+    return lotInconsistencies.filter(item => {
+      const severityMatch = !filterSeverity || item.severity === filterSeverity;
+      const typeMatch = !filterType || item.type === filterType;
+      return severityMatch && typeMatch;
+    });
+  }, [lotInconsistencies, filterSeverity, filterType]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredInconsistencies.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedInconsistencies = filteredInconsistencies.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterSeverity, filterType]);
 
   // Using the combined repacking analysis function
   const displayName = "Repacking";
@@ -1361,7 +1481,7 @@ const RepackingAnalysis = () => {
                 <td className="p-2 text-right text-green-600">{formatPrice(row.repackingCharges || 0)}</td>
                 <td className="p-2 text-right">{formatPrice(row.avgPerBox || 0)}</td>
                 <td className="p-2 text-right">{formatNumber(row.lots || 0)}</td>
-             
+              </tr>
             ))}
           </tbody>
         </table>
@@ -2803,7 +2923,7 @@ const ExternalConsistencyAnalysis = ({ metrics, chargeData }) => {
                 <p className="text-blue-700 text-sm">
                   <strong>ISO 5725:</strong> Accuracy and precision of measurement methods - Between-laboratory consistency<br/>
                   <strong>ASTM E691:</strong> Standard practice for conducting an interlaboratory study<br/>
-                  <strong>Classification:</strong> Based on Coefficient of Variation (CV) thresholds: Excellent ≤10%, Good ≤15%, Acceptable ≤20%, Poor ≤25%, Very Inconsistent >25%
+                  <strong>Classification:</strong> Based on Coefficient of Variation (CV) thresholds: Excellent ≤10%, Good ≤15%, Acceptable ≤20%, Poor ≤25%, Very Inconsistent &gt;25%
                 </p>
               </div>
             </div>
@@ -2812,7 +2932,6 @@ const ExternalConsistencyAnalysis = ({ metrics, chargeData }) => {
       )}
     </div>
   );
-};
 };
 
 // Final Cost Analysis Tables Component

@@ -20,7 +20,8 @@ const Header = () => {
             <img 
               src="./Header PP Logo.png" 
               alt="Famus Logo" 
-              className="h-12 sm:h-14 lg:h-16 w-auto max-w-[150px] sm:max-w-[180px]"
+              className="h-16 sm:h-20 lg:h-24 w-auto max-w-[200px] sm:max-w-[250px] lg:max-w-[300px] object-contain"
+              style={{ aspectRatio: 'auto' }}
               onError={(e) => {
                 console.error('Header logo failed to load:', e.target.src);
                 // Try alternative paths
