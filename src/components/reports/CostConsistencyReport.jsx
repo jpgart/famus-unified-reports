@@ -29,6 +29,9 @@ const KPICards = ({ metrics }) => {
   
   // Get unique exporters for filter (exclude specified exporters)
   const exporters = useMemo(() => {
+    if (!metrics || typeof metrics !== 'object') {
+      return ['All'];
+    }
     const allExporters = [...new Set(Object.values(metrics).map(l => l.exporter))]
       .filter(Boolean);
     const filteredExporters = filterExportersList(allExporters);
@@ -36,6 +39,17 @@ const KPICards = ({ metrics }) => {
   }, [metrics]);
 
   const kpiData = useMemo(() => {
+    if (!metrics || typeof metrics !== 'object') {
+      return {
+        totalLots: 0,
+        avgCostPerBox: 0,
+        totalCharges: 0,
+        totalBoxes: 0,
+        uniqueExporters: 0,
+        consistencyScore: 0
+      };
+    }
+    
     const lotids = Object.values(metrics);
     const filteredLotids = selectedExporter === 'All' 
       ? lotids 
@@ -260,7 +274,7 @@ const KeyCostInsights = ({ insights }) => {
     };
 
     // Populate with the provided insights, categorizing them appropriately
-    if (insights && insights.length > 0) {
+    if (insights && Array.isArray(insights) && insights.length > 0) {
       insights.forEach((insight, index) => {
         if (insight.toLowerCase().includes('lead') || insight.toLowerCase().includes('highest') || insight.toLowerCase().includes('top')) {
           categorized.leadership.push(insight);
@@ -429,6 +443,10 @@ const ExporterCostComparator = ({ metrics }) => {
   const [selectedExporter, setSelectedExporter] = useState('All');
 
   const exporterAnalysis = useMemo(() => {
+    if (!metrics || typeof metrics !== 'object') {
+      return [];
+    }
+    
     const lotids = Object.values(metrics);
     const exporterStats = {};
 
@@ -626,6 +644,8 @@ const OceanFreightAnalysis = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterSeverity, setFilterSeverity] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [filterExporter, setFilterExporter] = useState('');
+  const [lotInconsistencies, setLotInconsistencies] = useState([]);
   const itemsPerPage = 15;
 
   // Filter logic
@@ -633,9 +653,10 @@ const OceanFreightAnalysis = () => {
     return lotInconsistencies.filter(item => {
       const severityMatch = !filterSeverity || item.severity === filterSeverity;
       const typeMatch = !filterType || item.type === filterType;
-      return severityMatch && typeMatch;
+      const exporterMatch = !filterExporter || item.exporter === filterExporter;
+      return severityMatch && typeMatch && exporterMatch;
     });
-  }, [lotInconsistencies, filterSeverity, filterType]);
+  }, [lotInconsistencies, filterSeverity, filterType, filterExporter]);
 
   // Pagination
   const totalPages = Math.ceil(filteredInconsistencies.length / itemsPerPage);
@@ -645,7 +666,7 @@ const OceanFreightAnalysis = () => {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterSeverity, filterType]);
+  }, [filterSeverity, filterType, filterExporter]);
 
   useEffect(() => {
     const loadFreightAnalysis = async () => {
@@ -675,86 +696,6 @@ const OceanFreightAnalysis = () => {
     }
   };
 
-  // Function to detect inconsistencies in Ocean Freight costs by Lotid
-  const detectInconsistencies = () => {
-    if (!freightData || !freightData.byExporter) return [];
-    
-    const avgFreight = freightData.summary?.avgPerBox || 0;
-    const inconsistencies = [];
-    
-    // We need to access individual lots data - let's use the raw data analysis
-    // First, let's check if we have access to individual lot data
-    const loadIndividualLotAnalysis = async () => {
-      try {
-        // Re-analyze to get individual lot data
-        const rawData = await analyzeSpecificChargeFromEmbedded('OCEAN FREIGHT', 'Ocean Freight');
-        
-        if (rawData && rawData.analysis && rawData.summary) {
-          const avgCostPerBox = rawData.summary.avgPerBox || 0;
-          
-          // Get all lots data by re-processing
-          const embeddedData = await getChargeDataFromEmbedded();
-          const oceanFreightData = embeddedData.filter(row => 
-            row.Chargedescr === 'OCEAN FREIGHT' && row.Chgamt > 0
-          );
-          
-          // Group by lotid to get individual lot costs
-          const lotData = {};
-          oceanFreightData.forEach(row => {
-            const lotid = row.Lotid;
-            if (!lotData[lotid]) {
-              lotData[lotid] = {
-                lotid,
-                exporter: row['Exporter Clean'],
-                totalCharge: 0,
-                initialStock: row['Initial Stock'] || 0
-              };
-            }
-            lotData[lotid].totalCharge += row.Chgamt;
-          });
-          
-          // Calculate cost per box for each lot and check deviations
-          Object.values(lotData).forEach(lot => {
-            const costPerBox = lot.initialStock > 0 ? lot.totalCharge / lot.initialStock : 0;
-            if (costPerBox > 0) {
-              const deviation = Math.abs(costPerBox - avgCostPerBox);
-              const percentageDeviation = avgCostPerBox > 0 ? (deviation / avgCostPerBox) * 100 : 0;
-              
-              // Show all deviations >= 10% (Medium and High)
-              if (percentageDeviation >= 10) {
-                const category = categorizeDeviation(percentageDeviation);
-                inconsistencies.push({
-                  lotid: lot.lotid,
-                  exporter: lot.exporter,
-                  cost: costPerBox,
-                  totalCharge: lot.totalCharge,
-                  boxes: lot.initialStock,
-                  deviation: percentageDeviation,
-                  type: costPerBox > avgCostPerBox ? 'High' : 'Low',
-                  flag: category.flag,
-                  severity: category.severity,
-                  level: category.level,
-                  color: category.color
-                });
-              }
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error loading individual lot analysis:', error);
-      }
-      
-      return inconsistencies.sort((a, b) => b.deviation - a.deviation);
-    };
-    
-    // For now, return empty array and trigger the async load
-    // This will be populated when the component re-renders with the data
-    return [];
-  };
-
-  // State for individual lot inconsistencies
-  const [lotInconsistencies, setLotInconsistencies] = useState([]);
-  
   // Load individual lot inconsistencies
   useEffect(() => {
     const loadLotInconsistencies = async () => {
@@ -819,6 +760,39 @@ const OceanFreightAnalysis = () => {
     
     loadLotInconsistencies();
   }, [freightData]);
+
+  // Function to detect inconsistencies in Ocean Freight costs
+  const detectInconsistencies = () => {
+    if (!freightData || !freightData.byExporter) return [];
+    
+    const avgFreight = freightData.summary?.avgPerBox || 0;
+    const inconsistencies = [];
+    
+    // Convert byExporter object to array
+    const exportersArray = Object.values(freightData.byExporter);
+    
+    exportersArray.forEach(exporter => {
+      const deviation = Math.abs(exporter.avgPerBox - avgFreight);
+      const percentageDeviation = avgFreight > 0 ? (deviation / avgFreight) * 100 : 0;
+      
+      // Show all deviations >= 10% (Medium and High)
+      if (percentageDeviation >= 10) {
+        const category = categorizeDeviation(percentageDeviation);
+        inconsistencies.push({
+          exporter: exporter.exporter,
+          cost: exporter.avgPerBox,
+          deviation: percentageDeviation,
+          type: exporter.avgPerBox > avgFreight ? 'High' : 'Low',
+          flag: category.flag,
+          severity: category.severity,
+          level: category.level,
+          color: category.color
+        });
+      }
+    });
+    
+    return inconsistencies.sort((a, b) => b.deviation - a.deviation);
+  };
 
   if (loading) {
     return (
@@ -933,7 +907,7 @@ const OceanFreightAnalysis = () => {
       {lotInconsistencies.length > 0 && (
         <div className="mb-4 p-4 bg-gray-50 rounded-lg">
           <h4 className="text-sm font-semibold text-gray-700 mb-3">🔍 Filters</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Severity</label>
               <select
@@ -959,13 +933,27 @@ const OceanFreightAnalysis = () => {
                 <option value="Low">Low Cost</option>
               </select>
             </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Exporter</label>
+              <select
+                value={filterExporter}
+                onChange={(e) => setFilterExporter(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Exporters</option>
+                {[...new Set(lotInconsistencies.map(item => item.exporter))].sort().map(exporter => (
+                  <option key={exporter} value={exporter}>{exporter}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          {(filterSeverity || filterType) && (
+          {(filterSeverity || filterType || filterExporter) && (
             <div className="mt-3">
               <button
                 onClick={() => {
                   setFilterSeverity('');
                   setFilterType('');
+                  setFilterExporter('');
                 }}
                 className="text-sm text-blue-600 hover:text-blue-800 underline"
               >
@@ -1006,7 +994,7 @@ const OceanFreightAnalysis = () => {
                 </tr>
               </thead>
               <tbody>
-                {lotInconsistencies.map((item, index) => (
+                {paginatedInconsistencies.map((item, index) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-[#E8F4F8]' : 'bg-white'}>
                     <td className="p-3 text-center text-lg">{item.flag}</td>
                     <td className="p-3 font-medium text-[#3D5A80]">{item.lotid}</td>
@@ -1027,6 +1015,34 @@ const OceanFreightAnalysis = () => {
                 ))}
               </tbody>
             </table>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t">
+                <div className="text-sm text-gray-700">
+                  Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredInconsistencies.length)} of {filteredInconsistencies.length} results
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <span className="px-3 py-1 text-sm">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1105,6 +1121,7 @@ const RepackingAnalysis = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterSeverity, setFilterSeverity] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [filterExporter, setFilterExporter] = useState('');
   const itemsPerPage = 15;
 
   // Filter logic
@@ -1112,9 +1129,10 @@ const RepackingAnalysis = () => {
     return lotInconsistencies.filter(item => {
       const severityMatch = !filterSeverity || item.severity === filterSeverity;
       const typeMatch = !filterType || item.type === filterType;
-      return severityMatch && typeMatch;
+      const exporterMatch = !filterExporter || item.exporter === filterExporter;
+      return severityMatch && typeMatch && exporterMatch;
     });
-  }, [lotInconsistencies, filterSeverity, filterType]);
+  }, [lotInconsistencies, filterSeverity, filterType, filterExporter]);
 
   // Pagination
   const totalPages = Math.ceil(filteredInconsistencies.length / itemsPerPage);
@@ -1124,7 +1142,7 @@ const RepackingAnalysis = () => {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterSeverity, filterType]);
+  }, [filterSeverity, filterType, filterExporter]);
 
   // Using the combined repacking analysis function
   const displayName = "Repacking";
@@ -1349,6 +1367,77 @@ const RepackingAnalysis = () => {
         containerClass=""
       />
 
+      {/* Filtros para la tabla de inconsistencias */}
+      {lotInconsistencies.length > 0 && (
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">🔍 Filters</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Severity</label>
+              <select
+                value={filterSeverity}
+                onChange={(e) => setFilterSeverity(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Severities</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Cost Type</label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Types</option>
+                <option value="High">High Cost</option>
+                <option value="Low">Low Cost</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Exporter</label>
+              <select
+                value={filterExporter}
+                onChange={(e) => setFilterExporter(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">All Exporters</option>
+                {[...new Set(lotInconsistencies.map(item => item.exporter))].sort().map(exporter => (
+                  <option key={exporter} value={exporter}>{exporter}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {(filterSeverity || filterType || filterExporter) && (
+            <div className="mt-3">
+              <button
+                onClick={() => {
+                  setFilterSeverity('');
+                  setFilterType('');
+                  setFilterExporter('');
+                }}
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Contador y título de tabla */}
+      {lotInconsistencies.length > 0 && (
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="text-md font-semibold text-gray-800">Repacking Cost Analysis by Lot</h4>
+          <div className="text-sm text-gray-600">
+            {filteredInconsistencies.length} of {lotInconsistencies.length} lots shown
+          </div>
+        </div>
+      )}
+
       {/* Inconsistency Detection Table */}
       {lotInconsistencies.length > 0 && (
         <div className="mb-6">
@@ -1369,7 +1458,7 @@ const RepackingAnalysis = () => {
                 </tr>
               </thead>
               <tbody>
-                {lotInconsistencies.map((item, index) => (
+                {paginatedInconsistencies.map((item, index) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-[#E8F4F8]' : 'bg-white'}>
                     <td className="p-3 text-center text-lg">{item.flag}</td>
                     <td className="p-3 font-medium text-[#3D5A80]">{item.lotid}</td>
@@ -1390,6 +1479,34 @@ const RepackingAnalysis = () => {
                 ))}
               </tbody>
             </table>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t">
+                <div className="text-sm text-gray-700">
+                  Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredInconsistencies.length)} of {filteredInconsistencies.length} results
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <span className="px-3 py-1 text-sm">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1551,6 +1668,10 @@ const OutlierAnalysis = ({ metrics }) => {
   };
 
   const outlierAnalysis = useMemo(() => {
+    if (!metrics || typeof metrics !== 'object') {
+      return { outliers: [], stats: null };
+    }
+    
     const lotids = Object.values(metrics).filter(l => l.costPerBox !== null);
     
     if (lotids.length === 0) return { outliers: [], stats: null };
@@ -3935,21 +4056,26 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
     const loadData = async () => {
       try {
         setLoading(true);
-        // console.log('📊 Loading cost data...');
+        setError(null); // Reset error state
+        console.log('📊 Loading cost data...');
         
         const [metricsData, chargeDataCSV] = await Promise.all([
           calculateMetricsFromEmbedded(),
           getChargeDataFromEmbedded()
         ]);
         
+        if (!metricsData || Object.keys(metricsData).length === 0) {
+          throw new Error('No metrics data loaded');
+        }
+        
         setMetrics(metricsData);
-        setChargeData(chargeDataCSV);
+        setChargeData(chargeDataCSV || []);
         setLoading(false);
         
-        // console.log(`✅ Loaded ${Object.keys(metricsData).length} lots`);
+        console.log(`✅ Loaded ${Object.keys(metricsData).length} lots`);
       } catch (err) {
         console.error('❌ Error loading cost data:', err);
-        setError(err.message);
+        setError(err.message || 'Error loading cost data');
         setLoading(false);
       }
     };
@@ -3966,6 +4092,10 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
 
   // Generate automated insights - always run, no conditional hooks
   const insights = useMemo(() => {
+    if (!metrics || typeof metrics !== 'object') {
+      return ['Loading cost data for insights analysis...'];
+    }
+    
     const lotids = Object.values(metrics);
     const validCosts = lotids.filter(l => l.costPerBox !== null);
     

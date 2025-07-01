@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-const PORT = 3001;
+const PORT = 3003; // Cambiar puerto para evitar conflictos
 
 // Serve static files from the dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
