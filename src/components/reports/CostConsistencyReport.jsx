@@ -1904,10 +1904,10 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
           const deviationFactor = deviation / stdDev;
           
           // More granular outlier detection:
-          // > 3 std dev = High severity (extreme outlier)
+          // > 2.5 std dev = High severity (extreme outlier)
           // > 2 std dev = Medium severity (moderate outlier) 
-          // > 1.5 std dev = Low severity (mild outlier)
-          if (deviationFactor > 3) {
+          // > 1.8 std dev = Low severity (mild outlier)
+          if (deviationFactor > 2.5) {
             issues.push({
               lotId: lot.lotid,
               exporter: exporter,
@@ -1929,7 +1929,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
               totalCharges: lot.totalChargeAmount || 0
             });
             hasIssue = true;
-          } else if (deviationFactor > 1.5) {
+          } else if (deviationFactor > 1.8) {
             issues.push({
               lotId: lot.lotid,
               exporter: exporter,
@@ -2094,12 +2094,12 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
 
       {/* Issues by Exporter Summary */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h4 className="text-sm font-semibold text-blue-800 mb-3">📊 Issues by Exporter (Top 10)</h4>
+        <h4 className="text-sm font-semibold text-blue-800 mb-3">📊 Issues by Exporter</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs max-w-6xl mx-auto">
           {issuesByExporter.map(([exporter, count]) => (
             <div key={exporter} className="bg-white p-2 rounded border">
               <div className="font-medium text-gray-700 truncate" title={exporter}>{exporter}</div>
-              <div className="text-blue-600 font-bold">{count} issues</div>
+              <div className="text-blue-600 font-bold">{count.toLocaleString()} issues</div>
             </div>
           ))}
         </div>
@@ -2272,7 +2272,7 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
                   <div className="space-y-2 text-sm">
                     <div><strong>Exporter:</strong> {selectedIssue.details.lot.exporter || 'Unknown'}</div>
                     <div><strong>Cost per Box:</strong> {selectedIssue.details.lot.costPerBox ? formatPrice(selectedIssue.details.lot.costPerBox) : 'N/A'}</div>
-                    <div><strong>Total Charges:</strong> {formatPrice(selectedIssue.details.lot.totalCharges || 0)}</div>
+                    <div><strong>Total Charges:</strong> {formatPrice(selectedIssue.details.lot.totalChargeAmount || 0)}</div>
                     <div><strong>Charge Records:</strong> {selectedIssue.details.charges.length}</div>
                   </div>
                 </div>
@@ -2736,7 +2736,7 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
                   <div className="space-y-2 text-sm">
                     <div><strong>Exporter:</strong> {selectedLot.lot.exporter}</div>
                     <div><strong>Cost per Box:</strong> {formatPrice(selectedLot.lot.costPerBox)}</div>
-                    <div><strong>Total Charges:</strong> {formatPrice(selectedLot.lot.totalCharges || 0)}</div>
+                    <div><strong>Total Charges:</strong> {formatPrice(selectedLot.lot.totalChargeAmount || 0)}</div>
                     <div><strong>Charge Records:</strong> {selectedLot.charges.length}</div>
                   </div>
                 </div>
