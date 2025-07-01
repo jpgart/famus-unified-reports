@@ -1167,10 +1167,10 @@ const RepackingAnalysis = () => {
   // Convert byExporter object to array for chart data
   const exportersArray = Object.values(analysisData.byExporter);
 
-  // Debug logs for repacking data structure
-  console.log('🔍 Repacking Debug - analysisData:', analysisData);
-  console.log('🔍 Repacking Debug - analysisData.analysis:', analysisData.analysis);
-  console.log('🔍 Repacking Debug - Available keys:', analysisData.analysis ? Object.keys(analysisData.analysis) : 'No analysis object');
+  // Debug logs for repacking data structure (commented out for performance)
+  // console.log('🔍 Repacking Debug - analysisData:', analysisData);
+  // console.log('🔍 Repacking Debug - analysisData.analysis:', analysisData.analysis);
+  // console.log('🔍 Repacking Debug - Available keys:', analysisData.analysis ? Object.keys(analysisData.analysis) : 'No analysis object');
 
   const chartData = {
     labels: exportersArray.map(e => e.exporter),
@@ -1361,7 +1361,7 @@ const RepackingAnalysis = () => {
                 <td className="p-2 text-right text-green-600">{formatPrice(row.repackingCharges || 0)}</td>
                 <td className="p-2 text-right">{formatPrice(row.avgPerBox || 0)}</td>
                 <td className="p-2 text-right">{formatNumber(row.lots || 0)}</td>
-              </tr>
+             
             ))}
           </tbody>
         </table>
@@ -1860,6 +1860,16 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
     const lots = Object.values(metrics);
     const issues = [];
     
+    // Pre-calculate statistics once for all lots (performance optimization)
+    const validCosts = lots.filter(l => l.costPerBox !== null).map(l => l.costPerBox);
+    let mean = 0;
+    let stdDev = 0;
+    
+    if (validCosts.length > 0) {
+      mean = validCosts.reduce((a, b) => a + b, 0) / validCosts.length;
+      stdDev = Math.sqrt(validCosts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / validCosts.length);
+    }
+    
     lots.forEach(lot => {
       // Get exporter info for the issue
       const exporter = lot.exporter || 'Unknown';
@@ -1893,54 +1903,48 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
         hasIssue = true;
       }
       
-      // Check for outlier costs with multiple severity levels
-      const validCosts = lots.filter(l => l.costPerBox !== null).map(l => l.costPerBox);
-      if (validCosts.length > 0) {
-        const mean = validCosts.reduce((a, b) => a + b, 0) / validCosts.length;
-        const stdDev = Math.sqrt(validCosts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / validCosts.length);
+      // Check for outlier costs with multiple severity levels (using pre-calculated stats)
+      if (validCosts.length > 0 && lot.costPerBox !== null) {
+        const deviation = Math.abs(lot.costPerBox - mean);
+        const deviationFactor = deviation / stdDev;
         
-        if (lot.costPerBox !== null) {
-          const deviation = Math.abs(lot.costPerBox - mean);
-          const deviationFactor = deviation / stdDev;
-          
-          // More granular outlier detection:
-          // > 2.5 std dev = High severity (extreme outlier)
-          // > 2 std dev = Medium severity (moderate outlier) 
-          // > 1.8 std dev = Low severity (mild outlier)
-          if (deviationFactor > 2.5) {
-            issues.push({
-              lotId: lot.lotid,
-              exporter: exporter,
-              type: 'Extreme Statistical Outlier',
-              severity: 'High',
-              description: `Cost extremely deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ)`,
-              costPerBox: lot.costPerBox,
-              totalCharges: lot.totalChargeAmount || 0
-            });
-            hasIssue = true;
-          } else if (deviationFactor > 2) {
-            issues.push({
-              lotId: lot.lotid,
-              exporter: exporter,
-              type: 'Statistical Outlier',
-              severity: 'Medium',
-              description: `Cost significantly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ)`,
-              costPerBox: lot.costPerBox,
-              totalCharges: lot.totalChargeAmount || 0
-            });
-            hasIssue = true;
-          } else if (deviationFactor > 1.8) {
-            issues.push({
-              lotId: lot.lotid,
-              exporter: exporter,
-              type: 'Mild Statistical Outlier',
-              severity: 'Low',
-              description: `Cost mildly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ)`,
-              costPerBox: lot.costPerBox,
-              totalCharges: lot.totalChargeAmount || 0
-            });
-            hasIssue = true;
-          }
+        // More granular outlier detection:
+        // > 2.5 std dev = High severity (extreme outlier)
+        // > 2 std dev = Medium severity (moderate outlier) 
+        // > 1.8 std dev = Low severity (mild outlier)
+        if (deviationFactor > 2.5) {
+          issues.push({
+            lotId: lot.lotid,
+            exporter: exporter,
+            type: 'Extreme Statistical Outlier',
+            severity: 'High',
+            description: `Cost extremely deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ)`,
+            costPerBox: lot.costPerBox,
+            totalCharges: lot.totalChargeAmount || 0
+          });
+          hasIssue = true;
+        } else if (deviationFactor > 2) {
+          issues.push({
+            lotId: lot.lotid,
+            exporter: exporter,
+            type: 'Statistical Outlier',
+            severity: 'Medium',
+            description: `Cost significantly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ)`,
+            costPerBox: lot.costPerBox,
+            totalCharges: lot.totalChargeAmount || 0
+          });
+          hasIssue = true;
+        } else if (deviationFactor > 1.8) {
+          issues.push({
+            lotId: lot.lotid,
+            exporter: exporter,
+            type: 'Mild Statistical Outlier',
+            severity: 'Low',
+            description: `Cost mildly deviates from average (${formatPrice(lot.costPerBox)} vs avg ${formatPrice(mean)}, ${deviationFactor.toFixed(1)}σ)`,
+            costPerBox: lot.costPerBox,
+            totalCharges: lot.totalChargeAmount || 0
+          });
+          hasIssue = true;
         }
       }
 
@@ -1977,11 +1981,9 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
       if (!hasIssue) {
         const formattedTotalCharges = (lot.totalChargeAmount || 0) === 0 ? '$0' : `$${(lot.totalChargeAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
         
-        // Calculate deviation info for consistent lots too
+        // Calculate deviation info for consistent lots too (using pre-calculated stats)
         let deviationInfo = '';
         if (validCosts.length > 0 && lot.costPerBox !== null) {
-          const mean = validCosts.reduce((a, b) => a + b, 0) / validCosts.length;
-          const stdDev = Math.sqrt(validCosts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / validCosts.length);
           const deviation = Math.abs(lot.costPerBox - mean);
           const deviationFactor = deviation / stdDev;
           deviationInfo = ` (${deviationFactor.toFixed(1)}σ from avg ${formatPrice(mean)})`;
@@ -3400,7 +3402,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
     const loadData = async () => {
       try {
         setLoading(true);
-        console.log('📊 Loading cost data...');
+        // console.log('📊 Loading cost data...');
         
         const [metricsData, chargeDataCSV] = await Promise.all([
           calculateMetricsFromEmbedded(),
@@ -3411,7 +3413,7 @@ const CostConsistencyReport = ({ onRefsUpdate }) => {
         setChargeData(chargeDataCSV);
         setLoading(false);
         
-        console.log(`✅ Loaded ${Object.keys(metricsData).length} lots`);
+        // console.log(`✅ Loaded ${Object.keys(metricsData).length} lots`);
       } catch (err) {
         console.error('❌ Error loading cost data:', err);
         setError(err.message);
