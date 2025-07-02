@@ -1,0 +1,18 @@
+# Famus Unified Reports
+
+User-agent: *
+Allow: /
+
+# Allow crawling of assets
+Allow: /favicon.svg
+Allow: /logo.svg
+Allow: /*.png
+Allow: /*.js
+Allow: /*.css
+
+# Sitemap (if you have one)
+# Sitemap: https://jpgart.github.io/famus-unified-reports/sitemap.xml
+
+# Developed by: Famus Team
+# Version: 3.0.0-FINAL-PRODUCTION
+# Last updated: July 2, 2025

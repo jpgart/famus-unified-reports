@@ -1,8 +1,10 @@
-name: Deploy to GitHub Pages
+name: Deploy Famus Reports to GitHub Pages
 
 on:
   push:
     branches: [ main ]
+    tags:
+      - 'v*-FINAL-PRODUCTION'
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -35,13 +37,16 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Build
-      run: npm run build
-      
+    - name: Build Famus Reports
+      run: |
+        npm run build
+        echo "Build completed for Famus Unified Reports v3.0.0-FINAL-PRODUCTION"
+        
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./dist
         force_orphan: true
+        commit_message: 🚀 Deploy Famus Reports v3.0.0-FINAL-PRODUCTION
