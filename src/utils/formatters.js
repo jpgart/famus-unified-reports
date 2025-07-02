@@ -31,11 +31,11 @@ export const formatTotalSales = (num) => {
   return `$${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 };
 
-// New standard: format price with $ and 1 decimal
+// New standard: format price with $ and thousands separator and 2 decimals
 export const formatPrice = (num) => {
   if (num === undefined || num === null || isNaN(num)) return 'N/A';
   const n = Number(num);
-  return `$${n.toFixed(1)}`;
+  return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 export const formatPercentage = (num) => {
