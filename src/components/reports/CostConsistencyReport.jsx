@@ -2217,11 +2217,17 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
         
         // Additional check for internal exporter inconsistency (new international standard approach)
         if (exporterCVValue > 25 && !hasIssue) {
+          // ISO standard: >25% CV = very inconsistent (High severity)
+          // >15% CV = Poor consistency (Medium severity)  
+          let severity = 'High';
+          if (exporterCVValue <= 30) severity = 'High';
+          else if (exporterCVValue <= 40) severity = 'High'; // Still high for extreme cases
+          
           issues.push({
             lotId: lot.lotid,
             exporter: exporter,
             type: 'Internal Exporter Inconsistency',
-            severity: 'Medium',
+            severity: severity,
             description: `Exporter shows high internal cost variability (CV: ${exporterCVValue.toFixed(1)}%) - ISO standard: >25% = very inconsistent`,
             costPerBox: lot.costPerBox,
             totalCharges: lot.totalChargeAmount || 0
@@ -2328,7 +2334,21 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
     const lot = metrics[lotId];
     if (!lot) return null;
 
-    const lotCharges = chargeData.filter(charge => charge.lotid === lotId);
+    // Try multiple matching strategies for charge data
+    const lotCharges = chargeData.filter(charge => {
+      // Direct match (case sensitive)
+      if (charge.lotid === lotId) return true;
+      // Case insensitive match
+      if (charge.lotid && charge.lotid.toLowerCase() === lotId.toLowerCase()) return true;
+      // Check if using 'lotId' instead of 'lotid'
+      if (charge.lotId === lotId) return true;
+      if (charge.lotId && charge.lotId.toLowerCase() === lotId.toLowerCase()) return true;
+      // Check if using 'LOTID' (uppercase)
+      if (charge.LOTID === lotId) return true;
+      if (charge.LOTID && charge.LOTID.toLowerCase() === lotId.toLowerCase()) return true;
+      return false;
+    });
+
     return {
       lot,
       charges: lotCharges,
@@ -2575,7 +2595,9 @@ const InternalConsistencyAnalysis = ({ metrics, chargeData }) => {
                   <div className="space-y-2 text-sm">
                     <div><strong>Exporter:</strong> {selectedIssue.details.lot.exporter || 'Unknown'}</div>
                     <div><strong>Cost per Box:</strong> {selectedIssue.details.lot.costPerBox ? formatPrice(selectedIssue.details.lot.costPerBox) : 'N/A'}</div>
-                    <div><strong>Total Charges:</strong> {formatPrice(selectedIssue.details.lot.totalChargeAmount || 0)}</div>
+                    <div><strong>Total Charges:</strong> {selectedIssue.details.lot.totalChargeAmount ? 
+                      `$${selectedIssue.details.lot.totalChargeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 
+                      '$0.00'}</div>
                     <div><strong>Charge Records:</strong> {selectedIssue.details.charges.length}</div>
                   </div>
                 </div>
@@ -3066,6 +3088,24 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
   const [sortOrder, setSortOrder] = useState('desc');
   const itemsPerPage = 20;
 
+  // Helper function to get CV category based on ISO standards
+  const getCVCategory = (cv) => {
+    if (cv <= 10) return { text: 'Excellent', color: 'text-green-600', bgColor: 'bg-green-100' };
+    if (cv <= 15) return { text: 'Good', color: 'text-blue-600', bgColor: 'bg-blue-100' };
+    if (cv <= 20) return { text: 'Acceptable', color: 'text-yellow-600', bgColor: 'bg-yellow-100' };
+    if (cv <= 25) return { text: 'Poor', color: 'text-orange-600', bgColor: 'bg-orange-100' };
+    return { text: 'Very Inconsistent', color: 'text-red-600', bgColor: 'bg-red-100' };
+  };
+
+  // Helper function to get Deviation category based on international standards
+  const getDeviationCategory = (deviation) => {
+    const absDeviation = Math.abs(deviation);
+    if (absDeviation <= 10) return { text: 'Normal', color: 'text-green-600', bgColor: 'bg-green-100' };
+    if (absDeviation <= 20) return { text: 'Moderate', color: 'text-yellow-600', bgColor: 'bg-yellow-100' };
+    if (absDeviation <= 50) return { text: 'High', color: 'text-orange-600', bgColor: 'bg-orange-100' };
+    return { text: 'Extreme', color: 'text-red-600', bgColor: 'bg-red-100' };
+  };
+
   // Prepare data for the table
   const tableData = useMemo(() => {
     const lots = Object.values(metrics)
@@ -3122,7 +3162,23 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
     const lot = metrics[lotId];
     if (!lot) return null;
 
-    const lotCharges = chargeData.filter(charge => charge.lotid === lotId);
+    // Enhanced charge matching with multiple strategies
+    const lotCharges = chargeData.filter(charge => {
+      // Direct match (case sensitive)
+      if (charge.lotid === lotId) return true;
+      // Case insensitive match
+      if (charge.lotid && charge.lotid.toLowerCase() === lotId.toLowerCase()) return true;
+      // Check if using 'lotId' instead of 'lotid'
+      if (charge.lotId === lotId) return true;
+      if (charge.lotId && charge.lotId.toLowerCase() === lotId.toLowerCase()) return true;
+      // Check if using 'LOTID' (uppercase)
+      if (charge.LOTID === lotId) return true;
+      if (charge.LOTID && charge.LOTID.toLowerCase() === lotId.toLowerCase()) return true;
+      // Check if using 'Lotid' (capitalize first letter) - COMMON IN DATA
+      if (charge.Lotid === lotId) return true;
+      if (charge.Lotid && charge.Lotid.toLowerCase() === lotId.toLowerCase()) return true;
+      return false;
+    });
     
     // Calculate statistics for this exporter
     const exporterLots = Object.values(metrics)
@@ -3135,6 +3191,9 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
     const exporterStdDev = exporterLots.length > 1
       ? Math.sqrt(exporterLots.reduce((sum, l) => sum + Math.pow(l.costPerBox - exporterAvg, 2), 0) / (exporterLots.length - 1))
       : 0;
+    
+    // Calculate Coefficient of Variation (CV) for exporter (ISO standard)
+    const exporterCV = exporterAvg > 0 ? (exporterStdDev / exporterAvg) * 100 : 0;
 
     // Calculate global statistics
     const allLots = Object.values(metrics)
@@ -3147,11 +3206,15 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
     const globalStdDev = allLots.length > 1
       ? Math.sqrt(allLots.reduce((sum, l) => sum + Math.pow(l.costPerBox - globalAvg, 2), 0) / (allLots.length - 1))
       : 0;
+    
+    // Calculate Coefficient of Variation (CV) for global (ISO standard)
+    const globalCV = globalAvg > 0 ? (globalStdDev / globalAvg) * 100 : 0;
 
-    // Group charges by type
+    // Group charges by type with enhanced field handling
     const chargeBreakdown = lotCharges.reduce((acc, charge) => {
-      const type = charge.chargeName || charge.Chargedescr || 'Unknown';
-      const amount = parseFloat(charge.chargeAmount || charge.Chgamt || 0);
+      // Handle different possible field names for charge type and amount
+      const type = charge.chargeName || charge.Chargedescr || charge.chargeType || charge.description || charge.chargetype || 'Unknown';
+      const amount = parseFloat(charge.chargeAmount || charge.Chgamt || charge.amount || charge.totalAmount || charge.chgamt || 0);
       
       if (!acc[type]) {
         acc[type] = {
@@ -3168,30 +3231,46 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
       return acc;
     }, {});
 
-    // Calculate charge type comparisons
+    // Calculate charge type comparisons with enhanced field handling
     const chargeComparisons = Object.entries(chargeBreakdown).map(([type, data]) => {
       // Get average for this charge type across all lots of same exporter
       const exporterChargesOfType = chargeData
-        .filter(c => (c.chargeName || c.Chargedescr) === type)
         .filter(c => {
-          const lotOfCharge = metrics[c.lotid];
+          const chargeType = c.chargeName || c.Chargedescr || c.chargeType || c.description || c.chargetype || 'Unknown';
+          return chargeType === type;
+        })
+        .filter(c => {
+          // Enhanced lot matching for charges
+          const chargeLotId = c.lotid || c.lotId || c.LOTID || c.Lotid;
+          const lotOfCharge = metrics[chargeLotId];
           return lotOfCharge && lotOfCharge.exporter === lot.exporter;
         });
       
       const exporterAvgForType = exporterChargesOfType.length > 0
-        ? exporterChargesOfType.reduce((sum, c) => sum + parseFloat(c.chargeAmount || c.Chgamt || 0), 0) / exporterChargesOfType.length
+        ? exporterChargesOfType.reduce((sum, c) => {
+            const amount = parseFloat(c.chargeAmount || c.Chgamt || c.amount || c.totalAmount || c.chgamt || 0);
+            return sum + amount;
+          }, 0) / exporterChargesOfType.length
         : 0;
 
       // Get global average for this charge type
       const globalChargesOfType = chargeData
-        .filter(c => (c.chargeName || c.Chargedescr) === type)
         .filter(c => {
-          const lotOfCharge = metrics[c.lotid];
+          const chargeType = c.chargeName || c.Chargedescr || c.chargeType || c.description || c.chargetype || 'Unknown';
+          return chargeType === type;
+        })
+        .filter(c => {
+          // Enhanced lot matching for charges
+          const chargeLotId = c.lotid || c.lotId || c.LOTID || c.Lotid;
+          const lotOfCharge = metrics[chargeLotId];
           return lotOfCharge && !isExporterExcluded(lotOfCharge.exporter);
         });
       
       const globalAvgForType = globalChargesOfType.length > 0
-        ? globalChargesOfType.reduce((sum, c) => sum + parseFloat(c.chargeAmount || c.Chgamt || 0), 0) / globalChargesOfType.length
+        ? globalChargesOfType.reduce((sum, c) => {
+            const amount = parseFloat(c.chargeAmount || c.Chgamt || c.amount || c.totalAmount || c.chgamt || 0);
+            return sum + amount;
+          }, 0) / globalChargesOfType.length
         : 0;
 
       return {
@@ -3214,12 +3293,14 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
         exporter: {
           avg: exporterAvg,
           stdDev: exporterStdDev,
+          cv: exporterCV,
           deviation: exporterAvg > 0 ? ((lot.costPerBox - exporterAvg) / exporterAvg * 100) : 0,
           count: exporterLots.length
         },
         global: {
           avg: globalAvg,
           stdDev: globalStdDev,
+          cv: globalCV,
           deviation: globalAvg > 0 ? ((lot.costPerBox - globalAvg) / globalAvg * 100) : 0,
           count: allLots.length
         }
@@ -3338,7 +3419,11 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
                 <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{lot.lotid}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{lot.exporter}</td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{formatPrice(lot.costPerBox)}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">${(lot.totalCharges || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                  {(lot.totalChargeAmount && lot.totalChargeAmount > 0) ? 
+                    `$${lot.totalChargeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 
+                    '$0.00'}
+                </td>
                 <td className="px-4 py-2 whitespace-nowrap text-sm">
                   <button
                     onClick={() => handleLotClick(lot)}
@@ -3403,7 +3488,9 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
                   <div className="space-y-2 text-sm">
                     <div><strong>Exporter:</strong> {selectedLot.lot.exporter}</div>
                     <div><strong>Cost per Box:</strong> {formatPrice(selectedLot.lot.costPerBox)}</div>
-                    <div><strong>Total Charges:</strong> {formatPrice(selectedLot.lot.totalChargeAmount || 0)}</div>
+                    <div><strong>Total Charges:</strong> {selectedLot.lot.totalChargeAmount ? 
+                      `$${selectedLot.lot.totalChargeAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 
+                      '$0.00'}</div>
                     <div><strong>Charge Records:</strong> {selectedLot.charges.length}</div>
                   </div>
                 </div>
@@ -3412,14 +3499,23 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
                   <h4 className="font-semibold mb-2">vs Exporter Average</h4>
                   <div className="space-y-2 text-sm">
                     <div><strong>Exporter Avg:</strong> {formatPrice(selectedLot.statistics.exporter.avg)}</div>
-                    <div><strong>Std Deviation:</strong> {formatPrice(selectedLot.statistics.exporter.stdDev)}</div>
-                    <div><strong>Deviation:</strong> <span className={`font-medium ${
-                      Math.abs(selectedLot.statistics.exporter.deviation) > 20 ? 'text-red-600' : 
-                      Math.abs(selectedLot.statistics.exporter.deviation) > 10 ? 'text-yellow-600' : 'text-green-600'
-                    }`}>
-                      {selectedLot.statistics.exporter.deviation > 0 ? '+' : ''}{selectedLot.statistics.exporter.deviation.toFixed(1)}%
-                    </span></div>
-                    <div><strong>Sample Size:</strong> {selectedLot.statistics.exporter.count} lots</div>
+                    <div><strong>CV (Coeff. Variation):</strong> 
+                      <span className={`font-medium ${getCVCategory(selectedLot.statistics.exporter.cv).color} mr-2`}>
+                        {selectedLot.statistics.exporter.cv.toFixed(1)}%
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCVCategory(selectedLot.statistics.exporter.cv).bgColor} ${getCVCategory(selectedLot.statistics.exporter.cv).color}`}>
+                        {getCVCategory(selectedLot.statistics.exporter.cv).text}
+                      </span>
+                    </div>
+                    <div><strong>Deviation:</strong> 
+                      <span className={`font-medium ${getDeviationCategory(selectedLot.statistics.exporter.deviation).color} mr-2`}>
+                        {selectedLot.statistics.exporter.deviation > 0 ? '+' : ''}{selectedLot.statistics.exporter.deviation.toFixed(1)}%
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getDeviationCategory(selectedLot.statistics.exporter.deviation).bgColor} ${getDeviationCategory(selectedLot.statistics.exporter.deviation).color}`}>
+                        {getDeviationCategory(selectedLot.statistics.exporter.deviation).text}
+                      </span>
+                    </div>
+                    <div><strong>Sample Size:</strong> {selectedLot.statistics.exporter.count.toLocaleString()} lots</div>
                   </div>
                 </div>
                 
@@ -3427,14 +3523,23 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
                   <h4 className="font-semibold mb-2">vs Global Average</h4>
                   <div className="space-y-2 text-sm">
                     <div><strong>Global Avg:</strong> {formatPrice(selectedLot.statistics.global.avg)}</div>
-                    <div><strong>Std Deviation:</strong> {formatPrice(selectedLot.statistics.global.stdDev)}</div>
-                    <div><strong>Deviation:</strong> <span className={`font-medium ${
-                      Math.abs(selectedLot.statistics.global.deviation) > 20 ? 'text-red-600' : 
-                      Math.abs(selectedLot.statistics.global.deviation) > 10 ? 'text-yellow-600' : 'text-green-600'
-                    }`}>
-                      {selectedLot.statistics.global.deviation > 0 ? '+' : ''}{selectedLot.statistics.global.deviation.toFixed(1)}%
-                    </span></div>
-                    <div><strong>Sample Size:</strong> {selectedLot.statistics.global.count} lots</div>
+                    <div><strong>CV (Coeff. Variation):</strong> 
+                      <span className={`font-medium ${getCVCategory(selectedLot.statistics.global.cv).color} mr-2`}>
+                        {selectedLot.statistics.global.cv.toFixed(1)}%
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCVCategory(selectedLot.statistics.global.cv).bgColor} ${getCVCategory(selectedLot.statistics.global.cv).color}`}>
+                        {getCVCategory(selectedLot.statistics.global.cv).text}
+                      </span>
+                    </div>
+                    <div><strong>Deviation:</strong> 
+                      <span className={`font-medium ${getDeviationCategory(selectedLot.statistics.global.deviation).color} mr-2`}>
+                        {selectedLot.statistics.global.deviation > 0 ? '+' : ''}{selectedLot.statistics.global.deviation.toFixed(1)}%
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getDeviationCategory(selectedLot.statistics.global.deviation).bgColor} ${getDeviationCategory(selectedLot.statistics.global.deviation).color}`}>
+                        {getDeviationCategory(selectedLot.statistics.global.deviation).text}
+                      </span>
+                    </div>
+                    <div><strong>Sample Size:</strong> {selectedLot.statistics.global.count.toLocaleString()} lots</div>
                   </div>
                 </div>
               </div>
@@ -3442,48 +3547,58 @@ const FinalCostAnalysisTables = ({ metrics, chargeData }) => {
               {/* Charge Breakdown with Comparisons */}
               <div>
                 <h4 className="font-semibold mb-4">Charge Breakdown & Comparisons</h4>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full table-auto text-sm">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="px-3 py-2 text-left">Charge Type</th>
-                        <th className="px-3 py-2 text-right">Amount</th>
-                        <th className="px-3 py-2 text-right">Count</th>
-                        <th className="px-3 py-2 text-right">Exporter Avg</th>
-                        <th className="px-3 py-2 text-right">vs Exporter</th>
-                        <th className="px-3 py-2 text-right">Global Avg</th>
-                        <th className="px-3 py-2 text-right">vs Global</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedLot.chargeComparisons.map((comp, index) => (
-                        <tr key={comp.type} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                          <td className="px-3 py-2 font-medium">{comp.type}</td>
-                          <td className="px-3 py-2 text-right">{formatPrice(comp.amount)}</td>
-                          <td className="px-3 py-2 text-right">{comp.count}</td>
-                          <td className="px-3 py-2 text-right">{formatPrice(comp.exporterAvg)}</td>
-                          <td className="px-3 py-2 text-right">
-                            <span className={`font-medium ${
-                              Math.abs(comp.deviationFromExporter) > 30 ? 'text-red-600' : 
-                              Math.abs(comp.deviationFromExporter) > 15 ? 'text-yellow-600' : 'text-green-600'
-                            }`}>
-                              {comp.deviationFromExporter > 0 ? '+' : ''}{comp.deviationFromExporter.toFixed(1)}%
-                            </span>
-                          </td>
-                          <td className="px-3 py-2 text-right">{formatPrice(comp.globalAvg)}</td>
-                          <td className="px-3 py-2 text-right">
-                            <span className={`font-medium ${
-                              Math.abs(comp.deviationFromGlobal) > 30 ? 'text-red-600' : 
-                              Math.abs(comp.deviationFromGlobal) > 15 ? 'text-yellow-600' : 'text-green-600'
-                            }`}>
-                              {comp.deviationFromGlobal > 0 ? '+' : ''}{comp.deviationFromGlobal.toFixed(1)}%
-                            </span>
-                          </td>
+                {selectedLot.chargeComparisons && selectedLot.chargeComparisons.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full table-auto text-sm">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="px-3 py-2 text-left">Charge Type</th>
+                          <th className="px-3 py-2 text-right">Amount</th>
+                          <th className="px-3 py-2 text-right">Count</th>
+                          <th className="px-3 py-2 text-right">Exporter Avg</th>
+                          <th className="px-3 py-2 text-right">vs Exporter</th>
+                          <th className="px-3 py-2 text-right">Global Avg</th>
+                          <th className="px-3 py-2 text-right">vs Global</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {selectedLot.chargeComparisons.map((comp, index) => (
+                          <tr key={comp.type} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="px-3 py-2 font-medium">{comp.type}</td>
+                            <td className="px-3 py-2 text-right">{formatPrice(comp.amount)}</td>
+                            <td className="px-3 py-2 text-right">{comp.count}</td>
+                            <td className="px-3 py-2 text-right">{formatPrice(comp.exporterAvg)}</td>
+                            <td className="px-3 py-2 text-right">
+                              <span className={`font-medium ${
+                                Math.abs(comp.deviationFromExporter) > 30 ? 'text-red-600' : 
+                                Math.abs(comp.deviationFromExporter) > 15 ? 'text-yellow-600' : 'text-green-600'
+                              }`}>
+                                {comp.deviationFromExporter > 0 ? '+' : ''}{comp.deviationFromExporter.toFixed(1)}%
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-right">{formatPrice(comp.globalAvg)}</td>
+                            <td className="px-3 py-2 text-right">
+                              <span className={`font-medium ${
+                                Math.abs(comp.deviationFromGlobal) > 30 ? 'text-red-600' : 
+                                Math.abs(comp.deviationFromGlobal) > 15 ? 'text-yellow-600' : 'text-green-600'
+                              }`}>
+                                {comp.deviationFromGlobal > 0 ? '+' : ''}{comp.deviationFromGlobal.toFixed(1)}%
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-yellow-800 text-sm">
+                      <strong>⚠️ No detailed charge breakdown available</strong><br />
+                      This lot has {selectedLot.charges.length} charge record(s), but detailed breakdown by charge type could not be processed. 
+                      This may be due to missing charge type information or field format variations in the source data.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
